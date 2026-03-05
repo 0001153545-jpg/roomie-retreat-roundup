@@ -1,14 +1,41 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest" });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  if (user) {
+    navigate("/");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Conta criada com sucesso! 🎉");
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: { full_name: form.name, account_type: form.type },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Conta criada! Verifique seu email para confirmar o cadastro. 🎉");
+      navigate("/login");
+    }
   };
 
   return (
@@ -28,7 +55,7 @@ const Register = () => {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Senha</label>
-            <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo de conta</label>
@@ -37,7 +64,9 @@ const Register = () => {
               <option value="owner">Proprietário</option>
             </select>
           </div>
-          <Button type="submit" className="w-full">Criar conta</Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Criando..." : "Criar conta"}
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
