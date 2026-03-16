@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
@@ -28,6 +29,7 @@ const RoomDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const room = rooms.find((r) => r.id === id);
   const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
 
@@ -221,11 +223,11 @@ const RoomDetail = () => {
             <div className="mb-4 space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-in</label>
-                <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input type="date" value={checkIn} min={new Date().toISOString().split("T")[0]} onChange={(e) => setCheckIn(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-out</label>
-                <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input type="date" value={checkOut} min={checkIn || new Date().toISOString().split("T")[0]} onChange={(e) => setCheckOut(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Hóspedes</label>
@@ -251,8 +253,10 @@ const RoomDetail = () => {
             </Button>
 
             <div className="mt-3 flex justify-center gap-3">
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Heart className="h-3.5 w-3.5" /> Favoritar</button>
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Share2 className="h-3.5 w-3.5" /> Compartilhar</button>
+              <button onClick={() => room && toggleFavorite(room.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <Heart className={`h-3.5 w-3.5 transition-colors ${room && favoriteIds.has(room.id) ? "fill-red-500 text-red-500" : ""}`} /> Favoritar
+              </button>
+              <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copiado!"); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Share2 className="h-3.5 w-3.5" /> Compartilhar</button>
             </div>
           </div>
         </div>

@@ -5,18 +5,23 @@ import RoomCard from "@/components/RoomCard";
 import { Search, SlidersHorizontal, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const amenityFilters = ["Wi-Fi", "Ar condicionado", "Piscina", "Café da manhã", "Estacionamento", "Aceita animais"];
 
 const SearchRooms = () => {
   const [searchParams] = useSearchParams();
   const initialCity = searchParams.get("city") || "";
+  const checkInParam = searchParams.get("checkIn") || "";
+  const checkOutParam = searchParams.get("checkOut") || "";
+  const guestsParam = searchParams.get("guests") || "";
 
   const [cityFilter, setCityFilter] = useState(initialCity);
   const [maxPrice, setMaxPrice] = useState(1000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("rating");
   const [showFilters, setShowFilters] = useState(false);
+  const { favoriteIds, toggleFavorite } = useFavorites();
 
   const toggleAmenity = (a: string) => {
     setSelectedAmenities((prev) =>
@@ -25,10 +30,13 @@ const SearchRooms = () => {
   };
 
   const filtered = useMemo(() => {
+    const guestsFilter = guestsParam ? Number(guestsParam) : 0;
+
     let result = rooms.filter((r) => {
       if (cityFilter && !r.city.toLowerCase().includes(cityFilter.toLowerCase())) return false;
       if (r.price > maxPrice) return false;
       if (selectedAmenities.length > 0 && !selectedAmenities.every((a) => r.amenities.includes(a))) return false;
+      if (guestsFilter > 0 && r.guests < guestsFilter) return false;
       return true;
     });
 
@@ -39,7 +47,7 @@ const SearchRooms = () => {
     });
 
     return result;
-  }, [cityFilter, maxPrice, selectedAmenities, sortBy]);
+  }, [cityFilter, maxPrice, selectedAmenities, sortBy, guestsParam]);
 
   return (
     <div className="container-page py-8">
@@ -48,6 +56,10 @@ const SearchRooms = () => {
       </h1>
       <p className="mb-6 text-muted-foreground">
         {filtered.length} hospedagens encontradas
+        {checkInParam && checkOutParam && (
+          <span> · {new Date(checkInParam + "T12:00:00").toLocaleDateString("pt-BR")} → {new Date(checkOutParam + "T12:00:00").toLocaleDateString("pt-BR")}</span>
+        )}
+        {guestsParam && <span> · {guestsParam} hóspede(s)</span>}
       </p>
 
       {/* Search & sort bar */}
@@ -120,7 +132,7 @@ const SearchRooms = () => {
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((room) => (
-            <RoomCard key={room.id} room={room} />
+            <RoomCard key={room.id} room={room} isFavorite={favoriteIds.has(room.id)} onToggleFavorite={toggleFavorite} />
           ))}
         </div>
       ) : (
