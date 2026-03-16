@@ -253,8 +253,10 @@ const RoomDetail = () => {
             </Button>
 
             <div className="mt-3 flex justify-center gap-3">
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Heart className="h-3.5 w-3.5" /> Favoritar</button>
-              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Share2 className="h-3.5 w-3.5" /> Compartilhar</button>
+              <button onClick={() => room && toggleFavorite(room.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <Heart className={`h-3.5 w-3.5 transition-colors ${room && favoriteIds.has(room.id) ? "fill-red-500 text-red-500" : ""}`} /> Favoritar
+              </button>
+              <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copiado!"); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Share2 className="h-3.5 w-3.5" /> Compartilhar</button>
             </div>
           </div>
         </div>
