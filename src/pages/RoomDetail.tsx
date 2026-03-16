@@ -29,6 +29,7 @@ const RoomDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const room = rooms.find((r) => r.id === id);
   const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
 
