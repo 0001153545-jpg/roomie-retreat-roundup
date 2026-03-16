@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
