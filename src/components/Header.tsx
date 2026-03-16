@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,28 +10,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-
-const navLinks = [
-  { label: "Início", path: "/" },
-  { label: "Buscar Quartos", path: "/buscar" },
-  { label: "Explorar", path: "/explorar" },
-  { label: "Anunciar Quarto", path: "/anunciar" },
-  { label: "Sobre", path: "/sobre" },
-  { label: "Contato", path: "/contato" },
-];
+import type { Language } from "@/i18n/translations";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
+
+  const navLinks = [
+    { label: t("nav.home"), path: "/" },
+    { label: t("nav.search"), path: "/buscar" },
+    { label: t("nav.explore"), path: "/explorar" },
+    { label: t("nav.advertise"), path: "/anunciar" },
+    { label: t("nav.about"), path: "/sobre" },
+    { label: t("nav.contact"), path: "/contato" },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
-    toast.success("Até logo!");
+    toast.success(t("common.byeToast"));
     navigate("/");
   };
+
+  const langOptions: { code: Language; flag: string; label: string }[] = [
+    { code: "pt", flag: "🇧🇷", label: "Português" },
+    { code: "en", flag: "🇺🇸", label: "English" },
+    { code: "es", flag: "🇪🇸", label: "Español" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -56,9 +65,11 @@ const Header = () => {
               <Button variant="ghost" size="icon" className="hidden sm:flex"><Globe className="h-4 w-4" /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>🇧🇷 Português</DropdownMenuItem>
-              <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
-              <DropdownMenuItem>🇪🇸 Español</DropdownMenuItem>
+              {langOptions.map((opt) => (
+                <DropdownMenuItem key={opt.code} onClick={() => setLanguage(opt.code)} className={language === opt.code ? "bg-muted font-semibold" : ""}>
+                  {opt.flag} {opt.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -67,23 +78,26 @@ const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="hidden gap-2 sm:inline-flex">
                   <User className="h-4 w-4" />
-                  {user.user_metadata?.full_name?.split(" ")[0] || "Conta"}
+                  {user.user_metadata?.full_name?.split(" ")[0] || t("nav.account")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate("/favoritos")}>
+                  <Heart className="mr-2 h-4 w-4" /> {t("nav.favorites")}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/minhas-reservas")}>
-                  <CalendarDays className="mr-2 h-4 w-4" /> Minhas Reservas
+                  <CalendarDays className="mr-2 h-4 w-4" /> {t("nav.myReservations")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" /> Sair
+                  <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <>
-              <Link to="/login"><Button variant="outline" size="sm" className="hidden sm:inline-flex">Entrar</Button></Link>
-              <Link to="/cadastro"><Button size="sm" className="hidden sm:inline-flex">Cadastrar</Button></Link>
+              <Link to="/login"><Button variant="outline" size="sm" className="hidden sm:inline-flex">{t("nav.login")}</Button></Link>
+              <Link to="/cadastro"><Button size="sm" className="hidden sm:inline-flex">{t("nav.register")}</Button></Link>
             </>
           )}
 
@@ -103,21 +117,36 @@ const Header = () => {
               </Link>
             ))}
             {user && (
-              <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
-                Minhas Reservas
-              </Link>
+              <>
+                <Link to="/favoritos" onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
+                  {t("nav.favorites")}
+                </Link>
+                <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
+                  {t("nav.myReservations")}
+                </Link>
+              </>
             )}
+            {/* Language selector mobile */}
+            <div className="mt-2 flex gap-2 border-t border-border pt-2">
+              {langOptions.map((opt) => (
+                <button key={opt.code} onClick={() => setLanguage(opt.code)}
+                  className={`rounded-md px-3 py-1.5 text-sm ${language === opt.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  {opt.flag}
+                </button>
+              ))}
+            </div>
             <div className="mt-3 flex gap-2 border-t border-border pt-3">
               {user ? (
-                <Button variant="outline" className="w-full" onClick={() => { handleSignOut(); setMobileOpen(false); }}>Sair</Button>
+                <Button variant="outline" className="w-full" onClick={() => { handleSignOut(); setMobileOpen(false); }}>{t("nav.logout")}</Button>
               ) : (
                 <>
                   <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                    <Button variant="outline" className="w-full">Entrar</Button>
+                    <Button variant="outline" className="w-full">{t("nav.login")}</Button>
                   </Link>
                   <Link to="/cadastro" className="flex-1" onClick={() => setMobileOpen(false)}>
-                    <Button className="w-full">Cadastrar</Button>
+                    <Button className="w-full">{t("nav.register")}</Button>
                   </Link>
                 </>
               )}
