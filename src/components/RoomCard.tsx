@@ -5,9 +5,11 @@ import type { Room } from "@/data/mockData";
 
 interface RoomCardProps {
   room: Room;
+  isFavorite?: boolean;
+  onToggleFavorite?: (roomId: string) => void;
 }
 
-const RoomCard = ({ room }: RoomCardProps) => {
+const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
   return (
     <Link
       to={`/quarto/${room.id}`}
@@ -21,10 +23,14 @@ const RoomCard = ({ room }: RoomCardProps) => {
           loading="lazy"
         />
         <button
-          onClick={(e) => { e.preventDefault(); }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavorite?.(room.id);
+          }}
           className="absolute right-3 top-3 rounded-full bg-card/80 p-2 backdrop-blur transition-colors hover:bg-card"
         >
-          <Heart className="h-4 w-4 text-foreground" />
+          <Heart className={`h-4 w-4 transition-colors ${isFavorite ? "fill-red-500 text-red-500" : "text-foreground"}`} />
         </button>
         {room.originalPrice && (
           <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground border-0">
