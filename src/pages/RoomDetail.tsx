@@ -223,11 +223,11 @@ const RoomDetail = () => {
             <div className="mb-4 space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-in</label>
-                <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input type="date" value={checkIn} min={new Date().toISOString().split("T")[0]} onChange={(e) => setCheckIn(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-out</label>
-                <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input type="date" value={checkOut} min={checkIn || new Date().toISOString().split("T")[0]} onChange={(e) => setCheckOut(e.target.value)} className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Hóspedes</label>
