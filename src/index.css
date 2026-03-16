@@ -117,3 +117,66 @@
     text-wrap: balance;
   }
 }
+
+/* Styled date inputs */
+.styled-date-input {
+  color-scheme: light;
+}
+
+.styled-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: none;
+  transition: opacity 0.2s;
+}
+
+.styled-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.dark .styled-date-input {
+  color-scheme: dark;
+}
+
+/* Styled select */
+.styled-select {
+  background-image: none;
+  cursor: pointer;
+}
+
+/* Styled range slider */
+.styled-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: hsl(var(--muted));
+  outline: none;
+}
+
+.styled-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  cursor: pointer;
+  border: 3px solid hsl(var(--card));
+  box-shadow: 0 2px 6px hsl(var(--primary) / 0.3);
+  transition: transform 0.15s;
+}
+
+.styled-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.styled-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  cursor: pointer;
+  border: 3px solid hsl(var(--card));
+  box-shadow: 0 2px 6px hsl(var(--primary) / 0.3);
+}

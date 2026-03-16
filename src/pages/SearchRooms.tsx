@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { rooms, cities } from "@/data/mockData";
+import { rooms } from "@/data/mockData";
 import RoomCard from "@/components/RoomCard";
-import { Search, SlidersHorizontal, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const amenityFilters = ["Wi-Fi", "Ar condicionado", "Piscina", "Café da manhã", "Estacionamento", "Aceita animais"];
 
 const SearchRooms = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const initialCity = searchParams.get("city") || "";
   const checkInParam = searchParams.get("checkIn") || "";
@@ -24,14 +26,11 @@ const SearchRooms = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
 
   const toggleAmenity = (a: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
-    );
+    setSelectedAmenities((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
   };
 
   const filtered = useMemo(() => {
     const guestsFilter = guestsParam ? Number(guestsParam) : 0;
-
     let result = rooms.filter((r) => {
       if (cityFilter && !r.city.toLowerCase().includes(cityFilter.toLowerCase())) return false;
       if (r.price > maxPrice) return false;
@@ -39,57 +38,52 @@ const SearchRooms = () => {
       if (guestsFilter > 0 && r.guests < guestsFilter) return false;
       return true;
     });
-
     result.sort((a, b) => {
       if (sortBy === "price") return a.price - b.price;
       if (sortBy === "rating") return b.rating - a.rating;
       return b.reviewCount - a.reviewCount;
     });
-
     return result;
   }, [cityFilter, maxPrice, selectedAmenities, sortBy, guestsParam]);
 
+  const sortOptions = [
+    { value: "rating", label: t("search.bestRating") },
+    { value: "price", label: t("search.lowestPrice") },
+    { value: "popular", label: t("search.mostPopular") },
+  ];
+
   return (
     <div className="container-page py-8">
-      <h1 className="mb-1 font-heading text-2xl font-bold text-foreground sm:text-3xl">
-        Buscar Quartos
-      </h1>
+      <h1 className="mb-1 font-heading text-2xl font-bold text-foreground sm:text-3xl">{t("search.title")}</h1>
       <p className="mb-6 text-muted-foreground">
-        {filtered.length} hospedagens encontradas
+        {filtered.length} {t("search.found")}
         {checkInParam && checkOutParam && (
           <span> · {new Date(checkInParam + "T12:00:00").toLocaleDateString("pt-BR")} → {new Date(checkOutParam + "T12:00:00").toLocaleDateString("pt-BR")}</span>
         )}
-        {guestsParam && <span> · {guestsParam} hóspede(s)</span>}
+        {guestsParam && <span> · {guestsParam} {t("hero.guestsPlural")}</span>}
       </p>
 
       {/* Search & sort bar */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Filtrar por cidade..."
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
+          <input type="text" placeholder={t("search.filterCity")} value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
         </div>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="rating">Melhor avaliação</option>
-          <option value="price">Menor preço</option>
-          <option value="popular">Mais populares</option>
-        </select>
-        <Button
-          variant="outline"
-          onClick={() => setShowFilters(!showFilters)}
-          className="gap-2"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filtros
+
+        {/* Styled sort select */}
+        <div className="relative">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+            className="styled-select appearance-none rounded-xl border border-input bg-card px-4 py-2.5 pr-10 text-sm font-medium text-foreground shadow-card outline-none transition-all focus:ring-2 focus:ring-ring hover:shadow-elevated cursor-pointer">
+            {sortOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
+
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-2 rounded-xl shadow-card hover:shadow-elevated">
+          <SlidersHorizontal className="h-4 w-4" />{t("search.filters")}
         </Button>
       </div>
 
@@ -97,29 +91,16 @@ const SearchRooms = () => {
       {showFilters && (
         <div className="mb-6 rounded-xl border border-border bg-card p-5 shadow-card">
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-foreground">
-              Preço máximo: R$ {maxPrice}
-            </label>
-            <input
-              type="range"
-              min={50}
-              max={1000}
-              step={10}
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full accent-primary"
-            />
+            <label className="mb-2 block text-sm font-medium text-foreground">{t("search.maxPrice")}: R$ {maxPrice}</label>
+            <input type="range" min={50} max={1000} step={10} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))}
+              className="styled-range w-full" />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-foreground">Comodidades</label>
+            <label className="mb-2 block text-sm font-medium text-foreground">{t("search.amenities")}</label>
             <div className="flex flex-wrap gap-2">
               {amenityFilters.map((a) => (
-                <Badge
-                  key={a}
-                  variant={selectedAmenities.includes(a) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleAmenity(a)}
-                >
+                <Badge key={a} variant={selectedAmenities.includes(a) ? "default" : "outline"}
+                  className="cursor-pointer transition-all hover:scale-105" onClick={() => toggleAmenity(a)}>
                   {a}
                 </Badge>
               ))}
@@ -138,10 +119,8 @@ const SearchRooms = () => {
       ) : (
         <div className="py-20 text-center">
           <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-          <h3 className="font-heading text-lg font-semibold text-foreground">
-            Nenhum quarto encontrado
-          </h3>
-          <p className="text-muted-foreground">Tente ajustar os filtros de busca</p>
+          <h3 className="font-heading text-lg font-semibold text-foreground">{t("search.noResults")}</h3>
+          <p className="text-muted-foreground">{t("search.adjustFilters")}</p>
         </div>
       )}
     </div>
