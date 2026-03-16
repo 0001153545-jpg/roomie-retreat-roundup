@@ -112,6 +112,7 @@ const HeroSearch = () => {
                 <input
                   type="date"
                   value={checkOut}
+                  min={checkIn || new Date().toISOString().split("T")[0]}
                   onChange={(e) => setCheckOut(e.target.value)}
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />

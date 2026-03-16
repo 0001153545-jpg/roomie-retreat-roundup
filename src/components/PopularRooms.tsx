@@ -3,9 +3,11 @@ import RoomCard from "./RoomCard";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const PopularRooms = () => {
   const featured = rooms.filter((r) => r.featured);
+  const { favoriteIds, toggleFavorite } = useFavorites();
 
   return (
     <section className="container-page py-16">
@@ -26,7 +28,7 @@ const PopularRooms = () => {
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {featured.map((room) => (
-          <RoomCard key={room.id} room={room} />
+          <RoomCard key={room.id} room={room} isFavorite={favoriteIds.has(room.id)} onToggleFavorite={toggleFavorite} />
         ))}
       </div>
     </section>
