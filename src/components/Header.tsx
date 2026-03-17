@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays, Heart } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,15 +11,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency, type Currency } from "@/contexts/CurrencyContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import type { Language } from "@/i18n/translations";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountType, setAccountType] = useState<string>("guest");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { t, language, setLanguage } = useLanguage();
+  const { currency, setCurrency } = useCurrency();
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!user) { setAccountType("guest"); return; }
+    supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
+      .then(({ data }) => { if (data) setAccountType(data.account_type); });
+  }, [user]);
 
   const navLinks = [
     { label: t("nav.home"), path: "/" },
@@ -36,10 +48,10 @@ const Header = () => {
     navigate("/");
   };
 
-  const langOptions: { code: Language; flag: string; label: string }[] = [
-    { code: "pt", flag: "🇧🇷", label: "Português" },
-    { code: "en", flag: "🇺🇸", label: "English" },
-    { code: "es", flag: "🇪🇸", label: "Español" },
+  const langOptions: { code: Language; flag: string; label: string; curr: Currency }[] = [
+    { code: "pt", flag: "🇧🇷", label: "Português", curr: "BRL" },
+    { code: "en", flag: "🇺🇸", label: "English", curr: "USD" },
+    { code: "es", flag: "🇪🇸", label: "Español", curr: "EUR" },
   ];
 
   return (
@@ -60,14 +72,21 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <Button variant="ghost" size="icon" onClick={toggleTheme} className="hidden sm:flex">
+            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </Button>
+
+          {/* Language + currency */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="hidden sm:flex"><Globe className="h-4 w-4" /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {langOptions.map((opt) => (
-                <DropdownMenuItem key={opt.code} onClick={() => setLanguage(opt.code)} className={language === opt.code ? "bg-muted font-semibold" : ""}>
-                  {opt.flag} {opt.label}
+                <DropdownMenuItem key={opt.code} onClick={() => { setLanguage(opt.code); setCurrency(opt.curr); }}
+                  className={language === opt.code ? "bg-muted font-semibold" : ""}>
+                  {opt.flag} {opt.label} ({opt.curr})
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -88,6 +107,11 @@ const Header = () => {
                 <DropdownMenuItem onClick={() => navigate("/minhas-reservas")}>
                   <CalendarDays className="mr-2 h-4 w-4" /> {t("nav.myReservations")}
                 </DropdownMenuItem>
+                {accountType === "owner" && (
+                  <DropdownMenuItem onClick={() => navigate("/meus-quartos")}>
+                    <Building2 className="mr-2 h-4 w-4" /> {t("nav.myRooms")}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
@@ -126,12 +150,21 @@ const Header = () => {
                   className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
                   {t("nav.myReservations")}
                 </Link>
+                {accountType === "owner" && (
+                  <Link to="/meus-quartos" onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
+                    {t("nav.myRooms")}
+                  </Link>
+                )}
               </>
             )}
-            {/* Language selector mobile */}
-            <div className="mt-2 flex gap-2 border-t border-border pt-2">
+            {/* Theme + language mobile */}
+            <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
+              <button onClick={toggleTheme} className="rounded-md p-1.5 bg-muted text-muted-foreground">
+                {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </button>
               {langOptions.map((opt) => (
-                <button key={opt.code} onClick={() => setLanguage(opt.code)}
+                <button key={opt.code} onClick={() => { setLanguage(opt.code); setCurrency(opt.curr); }}
                   className={`rounded-md px-3 py-1.5 text-sm ${language === opt.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                   {opt.flag}
                 </button>

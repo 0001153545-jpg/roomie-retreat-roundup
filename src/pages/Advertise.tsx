@@ -1,21 +1,44 @@
-import { useState } from "react";
-import { Building2, Camera, DollarSign, BarChart3 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Building2, Camera, DollarSign, BarChart3, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
+interface Listing {
+  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; created_at: string;
+}
 
 const Advertise = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { formatPrice, symbol } = useCurrency();
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
+  const [showMyRooms, setShowMyRooms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [myListings, setMyListings] = useState<Listing[]>([]);
+  const [accountType, setAccountType] = useState("guest");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [form, setForm] = useState({
     title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "",
   });
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
+      .then(({ data }) => { if (data) setAccountType(data.account_type); });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !showMyRooms) return;
+    supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setMyListings(data as Listing[]); });
+  }, [user, showMyRooms]);
 
   const steps = [
     { icon: Building2, title: t("advertise.step1"), desc: t("advertise.step1Desc") },
@@ -24,26 +47,68 @@ const Advertise = () => {
     { icon: BarChart3, title: t("advertise.step4"), desc: t("advertise.step4Desc") },
   ];
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handlePriceChange = (value: string) => {
+    // Allow max 4 digits + 2 decimals (e.g. 9999.99)
+    const clean = value.replace(/[^0-9.]/g, "");
+    const parts = clean.split(".");
+    let intPart = parts[0].slice(0, 4);
+    let decPart = parts[1] ? parts[1].slice(0, 2) : "";
+    const final = decPart ? `${intPart}.${decPart}` : parts.length > 1 ? `${intPart}.` : intPart;
+    setForm({ ...form, price: final });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      toast.error(t("advertise.loginRequired"));
-      navigate("/login");
-      return;
-    }
-    if (!form.title || !form.city || !form.price) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
+    if (!user) { toast.error(t("advertise.loginRequired")); navigate("/login"); return; }
+    if (accountType !== "owner") { toast.error(t("advertise.ownerOnly")); return; }
+    if (!form.title || !form.city || !form.price) { toast.error("Preencha todos os campos obrigatórios"); return; }
+
     setSubmitting(true);
-    // For now, store as a profile update or just show success
-    // In a real app, you'd have a listings table
-    toast.success("Propriedade cadastrada com sucesso! 🎉", {
-      description: `${form.title} — ${form.city}, ${form.state}`,
+    let imageUrl = "";
+
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("property-images").upload(path, imageFile);
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from("property-images").getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+    }
+
+    const { error } = await supabase.from("listings").insert({
+      user_id: user.id,
+      title: form.title,
+      city: form.city,
+      state: form.state,
+      type: form.type,
+      price: Number(form.price),
+      guests: Number(form.guests),
+      description: form.description,
+      image_url: imageUrl,
     });
+
     setSubmitting(false);
-    setShowForm(false);
-    setForm({ title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "" });
+
+    if (error) {
+      toast.error("Erro ao cadastrar: " + error.message);
+    } else {
+      toast.success("Propriedade cadastrada com sucesso! 🎉", {
+        description: `${form.title} — ${form.city}, ${form.state}`,
+      });
+      setShowForm(false);
+      setForm({ title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "" });
+      setImageFile(null);
+      setImagePreview("");
+    }
   };
 
   return (
@@ -68,17 +133,47 @@ const Advertise = () => {
         ))}
       </div>
 
-      {!showForm ? (
-        <div className="text-center">
+      <div className="text-center flex gap-3 justify-center flex-wrap">
+        {!showForm && (
           <Button size="lg" className="shadow-hero" onClick={() => {
             if (!user) { toast.error(t("advertise.loginRequired")); navigate("/login"); return; }
+            if (accountType !== "owner") { toast.error(t("advertise.ownerOnly")); return; }
             setShowForm(true);
           }}>
             {t("advertise.startNow")}
           </Button>
+        )}
+        {user && accountType === "owner" && (
+          <Button size="lg" variant="outline" onClick={() => setShowMyRooms(!showMyRooms)}>
+            {t("advertise.viewMyRooms")}
+          </Button>
+        )}
+      </div>
+
+      {/* My rooms list */}
+      {showMyRooms && (
+        <div className="mx-auto mt-8 max-w-3xl">
+          <h2 className="mb-4 font-heading text-xl font-bold text-foreground">{t("advertise.myRooms")}</h2>
+          {myListings.length === 0 ? (
+            <p className="text-muted-foreground">{t("advertise.noRooms")}</p>
+          ) : (
+            <div className="space-y-3">
+              {myListings.map((l) => (
+                <div key={l.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
+                  {l.image_url && <img src={l.image_url} alt={l.title} className="h-16 w-24 rounded-lg object-cover" />}
+                  <div className="flex-1">
+                    <h3 className="font-heading text-base font-semibold text-foreground">{l.title}</h3>
+                    <p className="text-xs text-muted-foreground">{l.city}, {l.state} · {l.type} · {formatPrice(l.price)}/noite</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="mx-auto max-w-xl rounded-xl border border-border bg-card p-6 shadow-elevated">
+      )}
+
+      {showForm && (
+        <div className="mx-auto mt-8 max-w-xl rounded-xl border border-border bg-card p-6 shadow-elevated">
           <h2 className="mb-6 font-heading text-xl font-bold text-foreground">{t("advertise.formTitle")}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -103,16 +198,13 @@ const Advertise = () => {
                 <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.propertyType")}</label>
                 <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
                   className="styled-select w-full appearance-none rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
-                  <option>Hotel</option>
-                  <option>Pousada</option>
-                  <option>Resort</option>
-                  <option>Suíte</option>
-                  <option>Hostel</option>
+                  <option>Hotel</option><option>Pousada</option><option>Resort</option><option>Suíte</option><option>Hostel</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.pricePerNight")} *</label>
-                <input type="number" min="1" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
+                <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.pricePerNight")} ({symbol}) *</label>
+                <input type="text" inputMode="decimal" value={form.price} onChange={(e) => handlePriceChange(e.target.value)}
+                  placeholder="0.00"
                   className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
               </div>
               <div>
@@ -123,6 +215,20 @@ const Advertise = () => {
                 </select>
               </div>
             </div>
+
+            {/* Photo upload */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.photo")}</label>
+              <div className="flex items-center gap-4">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary transition-colors">
+                  <Upload className="h-4 w-4" />
+                  {imageFile ? imageFile.name : "Selecionar foto"}
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+                {imagePreview && <img src={imagePreview} alt="Preview" className="h-16 w-24 rounded-lg object-cover" />}
+              </div>
+            </div>
+
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.descriptionLabel")}</label>
               <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}

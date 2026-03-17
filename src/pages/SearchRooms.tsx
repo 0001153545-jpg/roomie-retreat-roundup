@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const amenityFilters = ["Wi-Fi", "Ar condicionado", "Piscina", "Café da manhã", "Estacionamento", "Aceita animais"];
 
 const SearchRooms = () => {
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [searchParams] = useSearchParams();
   const initialCity = searchParams.get("city") || "";
   const checkInParam = searchParams.get("checkIn") || "";
@@ -58,12 +60,11 @@ const SearchRooms = () => {
       <p className="mb-6 text-muted-foreground">
         {filtered.length} {t("search.found")}
         {checkInParam && checkOutParam && (
-          <span> · {new Date(checkInParam + "T12:00:00").toLocaleDateString("pt-BR")} → {new Date(checkOutParam + "T12:00:00").toLocaleDateString("pt-BR")}</span>
+          <span> · {new Date(checkInParam + "T12:00:00").toLocaleDateString()} → {new Date(checkOutParam + "T12:00:00").toLocaleDateString()}</span>
         )}
         {guestsParam && <span> · {guestsParam} {t("hero.guestsPlural")}</span>}
       </p>
 
-      {/* Search & sort bar */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -71,7 +72,6 @@ const SearchRooms = () => {
             className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
         </div>
 
-        {/* Styled sort select */}
         <div className="relative">
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
             className="styled-select appearance-none rounded-xl border border-input bg-card px-4 py-2.5 pr-10 text-sm font-medium text-foreground shadow-card outline-none transition-all focus:ring-2 focus:ring-ring hover:shadow-elevated cursor-pointer">
@@ -87,11 +87,10 @@ const SearchRooms = () => {
         </Button>
       </div>
 
-      {/* Filters panel */}
       {showFilters && (
         <div className="mb-6 rounded-xl border border-border bg-card p-5 shadow-card">
           <div className="mb-4">
-            <label className="mb-2 block text-sm font-medium text-foreground">{t("search.maxPrice")}: R$ {maxPrice}</label>
+            <label className="mb-2 block text-sm font-medium text-foreground">{t("search.maxPrice")}: {formatPrice(maxPrice)}</label>
             <input type="range" min={50} max={1000} step={10} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="styled-range w-full" />
           </div>
@@ -109,7 +108,6 @@ const SearchRooms = () => {
         </div>
       )}
 
-      {/* Results */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((room) => (
