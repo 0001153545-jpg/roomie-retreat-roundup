@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ interface Reservation {
 const MyReservations = () => {
   const { user, loading } = useAuth();
   const { t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -77,13 +79,13 @@ const MyReservations = () => {
                   </div>
                   {room && <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {room.city}, {room.state}</p>}
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{new Date(res.check_in).toLocaleDateString("pt-BR")} → {new Date(res.check_out).toLocaleDateString("pt-BR")}</span>
+                    <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{new Date(res.check_in).toLocaleDateString()} → {new Date(res.check_out).toLocaleDateString()}</span>
                     <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {res.guests} {t("hero.guestsPlural")}</span>
                     <span>{nights} {t("room.nights")}</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <span className="font-heading text-lg font-bold text-foreground">R$ {Number(res.total).toFixed(0)}</span>
+                  <span className="font-heading text-lg font-bold text-foreground">{formatPrice(Number(res.total))}</span>
                   {res.status === "confirmed" && <Button variant="outline" size="sm" onClick={() => handleCancel(res.id)}>{t("reservations.cancel")}</Button>}
                 </div>
               </div>

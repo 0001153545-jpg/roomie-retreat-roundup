@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      listings: {
+        Row: {
+          city: string
+          created_at: string
+          description: string | null
+          guests: number
+          id: string
+          image_url: string | null
+          price: number
+          state: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          description?: string | null
+          guests?: number
+          id?: string
+          image_url?: string | null
+          price: number
+          state?: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          description?: string | null
+          guests?: number
+          id?: string
+          image_url?: string | null
+          price?: number
+          state?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_type: string

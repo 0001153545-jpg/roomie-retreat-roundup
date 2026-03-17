@@ -2,61 +2,48 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Contact = () => {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Mensagem enviada com sucesso! Responderemos em breve.");
+    toast.success(t("contact.sent"));
     setForm({ name: "", email: "", message: "" });
   };
 
   return (
     <div className="container-page py-12">
-      <h1 className="mb-2 font-heading text-3xl font-bold text-foreground sm:text-4xl">Contato</h1>
-      <p className="mb-8 text-muted-foreground">Entre em contato conosco. Estamos aqui para ajudar!</p>
+      <h1 className="mb-2 font-heading text-3xl font-bold text-foreground sm:text-4xl">{t("contact.title")}</h1>
+      <p className="mb-8 text-muted-foreground">{t("contact.subtitle")}</p>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Nome</label>
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
+            <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.name")}</label>
+            <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
+            <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.email")}</label>
+            <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Mensagem</label>
-            <textarea
-              required
-              rows={5}
-              value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
-              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
+            <label className="mb-1 block text-sm font-medium text-foreground">{t("contact.message")}</label>
+            <textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
+              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
-          <Button type="submit">Enviar mensagem</Button>
+          <Button type="submit">{t("contact.send")}</Button>
         </form>
 
         <div className="space-y-6">
           {[
-            { icon: Mail, label: "Email", value: "contato@reservafacil.com.br" },
-            { icon: Phone, label: "Telefone", value: "+55 (11) 99999-0000" },
-            { icon: MapPin, label: "Endereço", value: "São Paulo, SP — Brasil" },
+            { icon: Mail, label: t("contact.emailLabel"), value: "contato@reservafacil.com.br" },
+            { icon: Phone, label: t("contact.phoneLabel"), value: "+55 (11) 99999-0000" },
+            { icon: MapPin, label: t("contact.addressLabel"), value: "São Paulo, SP — Brasil" },
           ].map((item) => (
             <div key={item.label} className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
