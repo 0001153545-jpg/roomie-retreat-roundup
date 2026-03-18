@@ -51,7 +51,8 @@ const RoomDetail = () => {
   const { t, language } = useLanguage();
   const { formatPrice, currency } = useCurrency();
   const room = rooms.find((r) => r.id === id);
-  const mockReviewsData = (await import("@/data/mockData")).reviews.filter((r: any) => r.roomId === id);
+  const { reviews: allMockReviews } = require("@/data/mockData") as { reviews: any[] };
+  const roomMockReviews = allMockReviews.filter((r: any) => r.roomId === id);
 
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
