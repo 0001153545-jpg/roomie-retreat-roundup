@@ -376,6 +376,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "favorites.empty": "You haven't favorited any rooms yet.",
     "favorites.explore": "Explore Rooms",
 
+    "register.alreadyRegistered": "This email is already registered. Sign in.",
+    "register.success": "Account created! Check your email to confirm. 🎉",
+
+    "advertise.fillRequired": "Fill in all required fields",
+    "advertise.success": "Property registered successfully! 🎉",
+    "advertise.selectPhoto": "Select photo",
+    "advertise.stepLabel": "Step",
+
+    "common.language": "Language",
+
     "reservations.title": "My Reservations",
     "reservations.empty": "You don't have any reservations yet.",
     "reservations.searchRooms": "Search Rooms",
