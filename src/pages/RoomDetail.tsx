@@ -169,7 +169,7 @@ const RoomDetail = () => {
 
   const allReviews = [
     ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10) })),
-    ...mockReviewsData.map((r: any) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date })),
+    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date })),
   ];
 
   return (
