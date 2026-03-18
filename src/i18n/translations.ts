@@ -629,6 +629,16 @@ export const translations: Record<Language, Record<string, string>> = {
     "favorites.empty": "Aún no has guardado ninguna habitación.",
     "favorites.explore": "Explorar Habitaciones",
 
+    "register.alreadyRegistered": "Este correo ya está registrado. Inicia sesión.",
+    "register.success": "¡Cuenta creada! Revisa tu correo para confirmar. 🎉",
+
+    "advertise.fillRequired": "Completa todos los campos obligatorios",
+    "advertise.success": "¡Propiedad registrada con éxito! 🎉",
+    "advertise.selectPhoto": "Seleccionar foto",
+    "advertise.stepLabel": "Paso",
+
+    "common.language": "Idioma",
+
     "reservations.title": "Mis Reservas",
     "reservations.empty": "Aún no tienes reservas.",
     "reservations.searchRooms": "Buscar Habitaciones",
