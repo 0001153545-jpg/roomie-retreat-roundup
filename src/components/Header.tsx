@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2 } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,10 +44,16 @@ const Header = () => {
     navigate("/");
   };
 
-  const langOptions: { code: Language; flag: string; label: string; curr: Currency }[] = [
-    { code: "pt", flag: "🇧🇷", label: "Português", curr: "BRL" },
-    { code: "en", flag: "🇺🇸", label: "English", curr: "USD" },
-    { code: "es", flag: "🇪🇸", label: "Español", curr: "EUR" },
+  const langOptions: { code: Language; flag: string; label: string }[] = [
+    { code: "pt", flag: "🇧🇷", label: "Português" },
+    { code: "en", flag: "🇺🇸", label: "English" },
+    { code: "es", flag: "🇪🇸", label: "Español" },
+  ];
+
+  const currencyOptions: { code: Currency; label: string }[] = [
+    { code: "BRL", label: "R$ BRL" },
+    { code: "USD", label: "$ USD" },
+    { code: "EUR", label: "€ EUR" },
   ];
 
   return (
@@ -72,21 +74,29 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Theme toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="hidden sm:flex">
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
-          {/* Language + currency */}
+          {/* Language dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="hidden sm:flex"><Globe className="h-4 w-4" /></Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">{t("common.language")}</DropdownMenuLabel>
               {langOptions.map((opt) => (
-                <DropdownMenuItem key={opt.code} onClick={() => { setLanguage(opt.code); setCurrency(opt.curr); }}
-                  className={language === opt.code ? "bg-muted font-semibold" : ""}>
-                  {opt.flag} {opt.label} ({opt.curr})
+                <DropdownMenuItem key={opt.code} onClick={() => setLanguage(opt.code)}
+                  className={language === opt.code ? "bg-primary/10 font-semibold text-primary" : ""}>
+                  {opt.flag} {opt.label}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">{t("common.currency")}</DropdownMenuLabel>
+              {currencyOptions.map((opt) => (
+                <DropdownMenuItem key={opt.code} onClick={() => setCurrency(opt.code)}
+                  className={currency === opt.code ? "bg-primary/10 font-semibold text-primary" : ""}>
+                  {opt.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -142,45 +152,41 @@ const Header = () => {
             ))}
             {user && (
               <>
-                <Link to="/favoritos" onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
-                  {t("nav.favorites")}
-                </Link>
-                <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
-                  {t("nav.myReservations")}
-                </Link>
+                <Link to="/favoritos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.favorites")}</Link>
+                <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myReservations")}</Link>
                 {accountType === "owner" && (
-                  <Link to="/meus-quartos" onClick={() => setMobileOpen(false)}
-                    className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted">
-                    {t("nav.myRooms")}
-                  </Link>
+                  <Link to="/meus-quartos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myRooms")}</Link>
                 )}
               </>
             )}
-            {/* Theme + language mobile */}
-            <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
-              <button onClick={toggleTheme} className="rounded-md p-1.5 bg-muted text-muted-foreground">
-                {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              </button>
-              {langOptions.map((opt) => (
-                <button key={opt.code} onClick={() => { setLanguage(opt.code); setCurrency(opt.curr); }}
-                  className={`rounded-md px-3 py-1.5 text-sm ${language === opt.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {opt.flag}
+            <div className="mt-2 flex flex-col gap-2 border-t border-border pt-2">
+              <div className="flex items-center gap-2">
+                <button onClick={toggleTheme} className="rounded-md p-1.5 bg-muted text-muted-foreground">
+                  {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                 </button>
-              ))}
+                {langOptions.map((opt) => (
+                  <button key={opt.code} onClick={() => setLanguage(opt.code)}
+                    className={`rounded-md px-3 py-1.5 text-sm ${language === opt.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {opt.flag}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {currencyOptions.map((opt) => (
+                  <button key={opt.code} onClick={() => setCurrency(opt.code)}
+                    className={`rounded-md px-3 py-1.5 text-sm ${currency === opt.code ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                    {opt.code}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="mt-3 flex gap-2 border-t border-border pt-3">
               {user ? (
                 <Button variant="outline" className="w-full" onClick={() => { handleSignOut(); setMobileOpen(false); }}>{t("nav.logout")}</Button>
               ) : (
                 <>
-                  <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                    <Button variant="outline" className="w-full">{t("nav.login")}</Button>
-                  </Link>
-                  <Link to="/cadastro" className="flex-1" onClick={() => setMobileOpen(false)}>
-                    <Button className="w-full">{t("nav.register")}</Button>
-                  </Link>
+                  <Link to="/login" className="flex-1" onClick={() => setMobileOpen(false)}><Button variant="outline" className="w-full">{t("nav.login")}</Button></Link>
+                  <Link to="/cadastro" className="flex-1" onClick={() => setMobileOpen(false)}><Button className="w-full">{t("nav.register")}</Button></Link>
                 </>
               )}
             </div>

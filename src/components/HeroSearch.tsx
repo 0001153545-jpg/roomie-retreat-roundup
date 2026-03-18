@@ -2,18 +2,29 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, CalendarDays, Users, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cities } from "@/data/mockData";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { format, addMonths, isBefore, startOfDay, addDays } from "date-fns";
+import { pt, es, enUS } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import heroImage from "@/assets/hero-hotel.jpg";
 
 const HeroSearch = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [destination, setDestination] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkInDate, setCheckInDate] = useState<Date | undefined>();
+  const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
   const [guests, setGuests] = useState("2");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+
+  const today = startOfDay(new Date());
+  const maxDate = addMonths(today, 6);
+  const dateLocale = language === "pt" ? pt : language === "es" ? es : enUS;
 
   const handleDestinationChange = (value: string) => {
     setDestination(value);
@@ -28,8 +39,8 @@ const HeroSearch = () => {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (destination) params.set("city", destination);
-    if (checkIn) params.set("checkIn", checkIn);
-    if (checkOut) params.set("checkOut", checkOut);
+    if (checkInDate) params.set("checkIn", format(checkInDate, "yyyy-MM-dd"));
+    if (checkOutDate) params.set("checkOut", format(checkOutDate, "yyyy-MM-dd"));
     if (guests) params.set("guests", guests);
     navigate(`/buscar?${params.toString()}`);
   };
@@ -52,6 +63,7 @@ const HeroSearch = () => {
 
         <div className="mt-8 animate-fade-in rounded-2xl bg-card p-3 shadow-hero sm:mt-10 sm:p-4" style={{ animationDelay: "0.2s" }}>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {/* Destination */}
             <div className="relative lg:col-span-1">
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("hero.destination")}</label>
               <div className="relative">
@@ -71,24 +83,45 @@ const HeroSearch = () => {
               )}
             </div>
 
+            {/* Check-in */}
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("hero.checkIn")}</label>
-              <div className="relative">
-                <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input type="date" value={checkIn} min={new Date().toISOString().split("T")[0]} onChange={(e) => setCheckIn(e.target.value)}
-                  className="styled-date-input w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              </div>
+              <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-[42px]", !checkInDate && "text-muted-foreground")}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {checkInDate ? format(checkInDate, "dd/MM/yyyy") : t("room.selectDate")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={checkInDate}
+                    onSelect={(d) => { setCheckInDate(d); setCheckInOpen(false); if (d && checkOutDate && checkOutDate <= d) setCheckOutDate(undefined); }}
+                    disabled={(date) => isBefore(date, today) || date > maxDate}
+                    locale={dateLocale} initialFocus className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
             </div>
 
+            {/* Check-out */}
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("hero.checkOut")}</label>
-              <div className="relative">
-                <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input type="date" value={checkOut} min={checkIn || new Date().toISOString().split("T")[0]} onChange={(e) => setCheckOut(e.target.value)}
-                  className="styled-date-input w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              </div>
+              <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-[42px]", !checkOutDate && "text-muted-foreground")}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {checkOutDate ? format(checkOutDate, "dd/MM/yyyy") : t("room.selectDate")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={checkOutDate}
+                    onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
+                    disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate}
+                    locale={dateLocale} initialFocus className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
             </div>
 
+            {/* Guests */}
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("hero.guests")}</label>
               <div className="relative">
