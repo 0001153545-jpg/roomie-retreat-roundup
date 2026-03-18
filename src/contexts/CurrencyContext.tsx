@@ -31,11 +31,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     return saved && rates[saved] ? saved : "BRL";
   });
 
-  useEffect(() => {
-    const auto = langToCurrency[language] || "BRL";
-    setCurrencyState(auto);
-    localStorage.setItem("currency", auto);
-  }, [language]);
+  // Currency is now independent from language
 
   const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);

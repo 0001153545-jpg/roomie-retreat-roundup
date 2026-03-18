@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Listing {
-  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; created_at: string;
+  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; created_at: string; description: string | null;
 }
 
 const Advertise = () => {
@@ -31,13 +31,20 @@ const Advertise = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
-      .then(({ data }) => { if (data) setAccountType(data.account_type); });
+      .then(({ data }) => {
+        if (data) setAccountType(data.account_type);
+      });
   }, [user]);
+
+  const loadMyListings = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+    if (data) setMyListings(data as Listing[]);
+  };
 
   useEffect(() => {
     if (!user || !showMyRooms) return;
-    supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setMyListings(data as Listing[]); });
+    loadMyListings();
   }, [user, showMyRooms]);
 
   const steps = [
@@ -49,14 +56,10 @@ const Advertise = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    if (file) { setImageFile(file); setImagePreview(URL.createObjectURL(file)); }
   };
 
   const handlePriceChange = (value: string) => {
-    // Allow max 4 digits + 2 decimals (e.g. 9999.99)
     const clean = value.replace(/[^0-9.]/g, "");
     const parts = clean.split(".");
     let intPart = parts[0].slice(0, 4);
@@ -69,7 +72,7 @@ const Advertise = () => {
     e.preventDefault();
     if (!user) { toast.error(t("advertise.loginRequired")); navigate("/login"); return; }
     if (accountType !== "owner") { toast.error(t("advertise.ownerOnly")); return; }
-    if (!form.title || !form.city || !form.price) { toast.error("Preencha todos os campos obrigatórios"); return; }
+    if (!form.title || !form.city || !form.price) { toast.error(t("advertise.fillRequired")); return; }
 
     setSubmitting(true);
     let imageUrl = "";
@@ -81,6 +84,10 @@ const Advertise = () => {
       if (!uploadError) {
         const { data: urlData } = supabase.storage.from("property-images").getPublicUrl(path);
         imageUrl = urlData.publicUrl;
+      } else {
+        toast.error("Erro no upload: " + uploadError.message);
+        setSubmitting(false);
+        return;
       }
     }
 
@@ -88,11 +95,11 @@ const Advertise = () => {
       user_id: user.id,
       title: form.title,
       city: form.city,
-      state: form.state,
+      state: form.state || "",
       type: form.type,
       price: Number(form.price),
       guests: Number(form.guests),
-      description: form.description,
+      description: form.description || "",
       image_url: imageUrl,
     });
 
@@ -101,13 +108,15 @@ const Advertise = () => {
     if (error) {
       toast.error("Erro ao cadastrar: " + error.message);
     } else {
-      toast.success("Propriedade cadastrada com sucesso! 🎉", {
+      toast.success(t("advertise.success"), {
         description: `${form.title} — ${form.city}, ${form.state}`,
       });
       setShowForm(false);
+      setShowMyRooms(true);
       setForm({ title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "" });
       setImageFile(null);
       setImagePreview("");
+      loadMyListings();
     }
   };
 
@@ -125,7 +134,7 @@ const Advertise = () => {
               <step.icon className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Passo {i + 1}</p>
+              <p className="text-xs font-medium text-muted-foreground">{t("advertise.stepLabel")} {i + 1}</p>
               <h3 className="font-heading text-base font-semibold text-foreground">{step.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{step.desc}</p>
             </div>
@@ -150,7 +159,6 @@ const Advertise = () => {
         )}
       </div>
 
-      {/* My rooms list */}
       {showMyRooms && (
         <div className="mx-auto mt-8 max-w-3xl">
           <h2 className="mb-4 font-heading text-xl font-bold text-foreground">{t("advertise.myRooms")}</h2>
@@ -163,7 +171,7 @@ const Advertise = () => {
                   {l.image_url && <img src={l.image_url} alt={l.title} className="h-16 w-24 rounded-lg object-cover" />}
                   <div className="flex-1">
                     <h3 className="font-heading text-base font-semibold text-foreground">{l.title}</h3>
-                    <p className="text-xs text-muted-foreground">{l.city}, {l.state} · {l.type} · {formatPrice(l.price)}/noite</p>
+                    <p className="text-xs text-muted-foreground">{l.city}, {l.state} · {l.type} · {formatPrice(l.price)}/{t("room.perNight")}</p>
                   </div>
                 </div>
               ))}
@@ -216,13 +224,12 @@ const Advertise = () => {
               </div>
             </div>
 
-            {/* Photo upload */}
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.photo")}</label>
               <div className="flex items-center gap-4">
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary transition-colors">
                   <Upload className="h-4 w-4" />
-                  {imageFile ? imageFile.name : "Selecionar foto"}
+                  {imageFile ? imageFile.name : t("advertise.selectPhoto")}
                   <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                 </label>
                 {imagePreview && <img src={imagePreview} alt="Preview" className="h-16 w-24 rounded-lg object-cover" />}

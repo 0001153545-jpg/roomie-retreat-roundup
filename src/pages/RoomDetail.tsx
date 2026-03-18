@@ -1,21 +1,42 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { rooms, reviews as mockReviews } from "@/data/mockData";
-import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard } from "lucide-react";
+import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
+import { pt, es, enUS } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
   "Café da manhã": Coffee, "Piscina": Waves, "Aceita animais": PawPrint,
+};
+
+const amenityTranslations: Record<string, Record<string, string>> = {
+  "Wi-Fi": { pt: "Wi-Fi", en: "Wi-Fi", es: "Wi-Fi" },
+  "Ar condicionado": { pt: "Ar condicionado", en: "Air conditioning", es: "Aire acondicionado" },
+  "Estacionamento": { pt: "Estacionamento", en: "Parking", es: "Estacionamiento" },
+  "Café da manhã": { pt: "Café da manhã", en: "Breakfast", es: "Desayuno" },
+  "Piscina": { pt: "Piscina", en: "Pool", es: "Piscina" },
+  "Aceita animais": { pt: "Aceita animais", en: "Pet friendly", es: "Acepta mascotas" },
+  "Spa": { pt: "Spa", en: "Spa", es: "Spa" },
+  "Academia": { pt: "Academia", en: "Gym", es: "Gimnasio" },
+  "Lavanderia": { pt: "Lavanderia", en: "Laundry", es: "Lavandería" },
+  "Jacuzzi": { pt: "Jacuzzi", en: "Jacuzzi", es: "Jacuzzi" },
+  "Terraço": { pt: "Terraço", en: "Terrace", es: "Terraza" },
+  "Concierge 24h": { pt: "Concierge 24h", en: "24h Concierge", es: "Conserje 24h" },
+  "Praia privativa": { pt: "Praia privativa", en: "Private beach", es: "Playa privada" },
 };
 
 interface DbReview {
@@ -32,24 +53,34 @@ const RoomDetail = () => {
   const room = rooms.find((r) => r.id === id);
   const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
 
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(1);
+  const [checkInDate, setCheckInDate] = useState<Date | undefined>();
+  const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState<number[]>([]);
   const [activeImage, setActiveImage] = useState(0);
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
   const [reserving, setReserving] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "pix">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvv: "" });
   const [userReservations, setUserReservations] = useState<any[]>([]);
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [guestOpen, setGuestOpen] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
-  const currentYear = new Date().getFullYear();
-  const minDate = `${currentYear}-01-01` > today ? `${currentYear}-01-01` : today;
-  const maxDate = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const today = startOfDay(new Date());
+  const maxDate = addMonths(today, 6);
+  const dateLocale = language === "pt" ? pt : language === "es" ? es : enUS;
 
+  const totalGuests = adults + children.length;
   const roomTitle = t(`room.name.${id}`) !== `room.name.${id}` ? t(`room.name.${id}`) : room?.title || "";
+
+  const addChild = () => { if (children.length < 5) setChildren([...children, 5]); };
+  const removeChild = (i: number) => setChildren(children.filter((_, idx) => idx !== i));
+  const updateChildAge = (i: number, age: number) => { const u = [...children]; u[i] = Math.min(17, Math.max(0, age)); setChildren(u); };
+
+  const translateAmenity = (a: string) => amenityTranslations[a]?.[language] || a;
 
   useEffect(() => {
     if (!id) return;
@@ -72,8 +103,8 @@ const RoomDetail = () => {
     );
   }
 
-  const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)))
+  const nights = checkInDate && checkOutDate
+    ? Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)))
     : 1;
   const subtotal = room.price * nights;
   const fee = Math.round(subtotal * 0.1);
@@ -83,29 +114,30 @@ const RoomDetail = () => {
   const hasCompletedStay = user && userReservations.some((r) => r.status === "completed" || (r.status === "confirmed" && new Date(r.check_out) < new Date()));
 
   const handleReserve = async () => {
-    if (!user) { toast.error("Faça login para reservar"); navigate("/login"); return; }
-    if (!checkIn || !checkOut) { toast.error("Selecione as datas"); return; }
-    if (new Date(checkOut) <= new Date(checkIn)) { toast.error("Check-out deve ser após check-in"); return; }
+    if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
+    if (!checkInDate || !checkOutDate) { toast.error(t("room.selectDates")); return; }
+    if (checkOutDate <= checkInDate) { toast.error(t("room.checkOutAfter")); return; }
+    if (totalGuests > room.guests) { toast.error(t("room.tooManyGuests")); return; }
 
-    if (paymentMethod === "card") {
+    if (paymentMethod !== "pix") {
       if (!cardForm.number || !cardForm.name || !cardForm.expiry || !cardForm.cvv) {
-        toast.error("Preencha todos os dados do cartão"); return;
+        toast.error(t("room.fillCard")); return;
       }
     }
 
     setReserving(true);
-    // Simulate payment processing
     await new Promise((r) => setTimeout(r, 1500));
 
     const { error } = await supabase.from("reservations").insert({
       user_id: user.id, room_id: room.id, room_title: room.title,
-      check_in: checkIn, check_out: checkOut, guests, subtotal, fee, total,
+      check_in: format(checkInDate, "yyyy-MM-dd"), check_out: format(checkOutDate, "yyyy-MM-dd"),
+      guests: totalGuests, subtotal, fee, total,
     });
     setReserving(false);
 
     if (error) {
-      if (error.code === "23505") toast.error("Já existe uma reserva para este quarto nestas datas!");
-      else toast.error("Erro ao reservar: " + error.message);
+      if (error.code === "23505") toast.error(t("room.duplicateReservation"));
+      else toast.error("Erro: " + error.message);
     } else {
       toast.success(t("room.paymentSuccess"), {
         description: `${roomTitle} — ${nights} ${t("room.nights")} — ${t("room.total")}: ${formatPrice(total)}`,
@@ -116,13 +148,13 @@ const RoomDetail = () => {
 
   const handleComment = async () => {
     if (!comment.trim()) return;
-    if (!user) { toast.error("Faça login para avaliar"); navigate("/login"); return; }
+    if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
     if (hasReviewed) { toast.error(t("room.alreadyReviewed")); return; }
     if (!hasCompletedStay) { toast.error(t("room.mustStayFirst")); return; }
 
     const { data, error } = await supabase.from("reviews").insert({
       user_id: user.id, room_id: room.id, rating: userRating,
-      comment: comment.trim(), user_name: user.user_metadata?.full_name || "Usuário",
+      comment: comment.trim(), user_name: user.user_metadata?.full_name || "User",
     }).select().single();
 
     if (error) {
@@ -131,7 +163,7 @@ const RoomDetail = () => {
     } else {
       setDbReviews((prev) => [data as DbReview, ...prev]);
       setComment("");
-      toast.success("Avaliação enviada!");
+      toast.success(t("room.reviewSent"));
     }
   };
 
@@ -186,14 +218,13 @@ const RoomDetail = () => {
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {room.amenities.map((a) => {
               const Icon = amenityIcons[a] || Check;
-              return <div key={a} className="flex items-center gap-2 text-sm text-foreground"><Icon className="h-4 w-4 text-primary" />{a}</div>;
+              return <div key={a} className="flex items-center gap-2 text-sm text-foreground"><Icon className="h-4 w-4 text-primary" />{translateAmenity(a)}</div>;
             })}
           </div>
 
           <Separator className="mb-6" />
           <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">{t("room.reviewsTitle")} ({allReviews.length})</h2>
 
-          {/* Review form */}
           {!hasReviewed && hasCompletedStay && (
             <div className="mb-6 rounded-xl border border-border bg-card p-4">
               <label className="mb-2 block text-sm font-medium text-foreground">{t("room.leaveReview")}</label>
@@ -209,12 +240,8 @@ const RoomDetail = () => {
               <Button onClick={handleComment} disabled={!comment.trim()}>{t("room.submitReview")}</Button>
             </div>
           )}
-          {hasReviewed && (
-            <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>
-          )}
-          {user && !hasCompletedStay && !hasReviewed && (
-            <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>
-          )}
+          {hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>}
+          {user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
             {allReviews.map((review) => (
@@ -247,28 +274,103 @@ const RoomDetail = () => {
             </div>
 
             <div className="mb-4 space-y-3">
+              {/* Check-in Calendar */}
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("room.checkIn")}</label>
-                <input type="date" value={checkIn} min={minDate} max={maxDate} onChange={(e) => setCheckIn(e.target.value)}
-                  className="styled-date-input w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkInDate && "text-muted-foreground")}>
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {checkInDate ? format(checkInDate, "dd/MM/yyyy") : t("room.selectDate")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={checkInDate}
+                      onSelect={(d) => { setCheckInDate(d); setCheckInOpen(false); if (d && checkOutDate && checkOutDate <= d) setCheckOutDate(undefined); }}
+                      disabled={(date) => isBefore(date, today) || date > maxDate}
+                      locale={dateLocale}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+
+              {/* Check-out Calendar */}
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("room.checkOut")}</label>
-                <input type="date" value={checkOut} min={checkIn || minDate} max={maxDate} onChange={(e) => setCheckOut(e.target.value)}
-                  className="styled-date-input w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !checkOutDate && "text-muted-foreground")}>
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {checkOutDate ? format(checkOutDate, "dd/MM/yyyy") : t("room.selectDate")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={checkOutDate}
+                      onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
+                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate}
+                      locale={dateLocale}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+
+              {/* Guest selector */}
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("hero.guests")}</label>
-                <select value={guests} onChange={(e) => setGuests(Number(e.target.value))}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
-                  {Array.from({ length: room.guests }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>{n} {n === 1 ? t("hero.guest") : t("hero.guestsPlural")}</option>
-                  ))}
-                </select>
+                <Popover open={guestOpen} onOpenChange={setGuestOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <Users className="mr-2 h-4 w-4" />
+                      {adults} {t("room.adults")} · {children.length} {t("room.children")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="start">
+                    {/* Adults */}
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-sm font-medium text-foreground">{t("room.adults")}</span>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setAdults(Math.max(1, adults - 1))} className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-foreground hover:bg-muted transition-colors"><span className="text-lg">−</span></button>
+                        <span className="w-6 text-center text-sm font-medium text-foreground">{adults}</span>
+                        <button onClick={() => { if (adults + children.length < room.guests) setAdults(adults + 1); }} className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-foreground hover:bg-muted transition-colors"><span className="text-lg">+</span></button>
+                      </div>
+                    </div>
+                    <Separator />
+                    {/* Children */}
+                    <div className="flex items-center justify-between py-3">
+                      <span className="text-sm font-medium text-foreground">{t("room.children")}</span>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => { if (children.length > 0) removeChild(children.length - 1); }} className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-foreground hover:bg-muted transition-colors"><span className="text-lg">−</span></button>
+                        <span className="w-6 text-center text-sm font-medium text-foreground">{children.length}</span>
+                        <button onClick={() => { if (adults + children.length < room.guests) addChild(); }} className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-foreground hover:bg-muted transition-colors"><span className="text-lg">+</span></button>
+                      </div>
+                    </div>
+                    {children.length > 0 && (
+                      <div className="mt-2 space-y-2 border-t border-border pt-3">
+                        {children.map((age, i) => (
+                          <div key={i} className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">{t("room.childLabel")} {i + 1}</span>
+                            <select value={age} onChange={(e) => updateChildAge(i, Number(e.target.value))}
+                              className="rounded-lg border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-ring">
+                              {Array.from({ length: 18 }, (_, a) => <option key={a} value={a}>{a} {a === 1 ? t("room.year") : t("room.years")}</option>)}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
-            {checkIn && checkOut && (
+            {checkInDate && checkOutDate && (
               <div className="mb-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="text-foreground">{formatPrice(fee)}</span></div>
@@ -281,14 +383,19 @@ const RoomDetail = () => {
             <div className="mb-4">
               <label className="mb-2 block text-xs font-medium text-muted-foreground">{t("room.selectPayment")}</label>
               <div className="flex gap-2">
-                <button onClick={() => setPaymentMethod("card")}
-                  className={`flex-1 rounded-lg border p-2.5 text-sm font-medium transition-all ${paymentMethod === "card" ? "border-primary bg-primary/5 text-primary" : "border-input text-muted-foreground"}`}>
+                <button onClick={() => setPaymentMethod("credit")}
+                  className={`flex-1 rounded-lg border p-2.5 text-xs font-medium transition-all ${paymentMethod === "credit" ? "border-primary bg-primary/5 text-primary" : "border-input text-muted-foreground"}`}>
                   <CreditCard className="mx-auto mb-1 h-4 w-4" />
                   {t("room.creditCard")}
                 </button>
+                <button onClick={() => setPaymentMethod("debit")}
+                  className={`flex-1 rounded-lg border p-2.5 text-xs font-medium transition-all ${paymentMethod === "debit" ? "border-primary bg-primary/5 text-primary" : "border-input text-muted-foreground"}`}>
+                  <CreditCard className="mx-auto mb-1 h-4 w-4" />
+                  {t("room.debitCard")}
+                </button>
                 {language === "pt" && (
                   <button onClick={() => setPaymentMethod("pix")}
-                    className={`flex-1 rounded-lg border p-2.5 text-sm font-medium transition-all ${paymentMethod === "pix" ? "border-primary bg-primary/5 text-primary" : "border-input text-muted-foreground"}`}>
+                    className={`flex-1 rounded-lg border p-2.5 text-xs font-medium transition-all ${paymentMethod === "pix" ? "border-primary bg-primary/5 text-primary" : "border-input text-muted-foreground"}`}>
                     <span className="text-lg">◆</span>
                     {t("room.pix")}
                   </button>
@@ -297,7 +404,7 @@ const RoomDetail = () => {
             </div>
 
             {/* Card form */}
-            {paymentMethod === "card" && (
+            {(paymentMethod === "credit" || paymentMethod === "debit") && (
               <div className="mb-4 space-y-2">
                 <input type="text" placeholder={t("room.cardNumber")} value={cardForm.number}
                   onChange={(e) => setCardForm({ ...cardForm, number: e.target.value.replace(/\D/g, "").slice(0, 16) })}
