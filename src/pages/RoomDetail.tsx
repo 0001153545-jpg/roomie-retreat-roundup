@@ -301,6 +301,13 @@ const RoomDetail = () => {
         {/* Booking sidebar */}
         <div>
           <div className="sticky top-20 rounded-xl border border-border bg-card p-5 shadow-elevated">
+            {roomFullyBooked ? (
+              <div className="text-center py-6">
+                <p className="text-lg font-semibold text-destructive">{t("room.fullyBooked")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t("room.fullyBookedDesc")}</p>
+              </div>
+            ) : (
+            <>
             <div className="mb-4 flex items-baseline gap-2">
               <span className="font-heading text-2xl font-bold text-foreground">{formatPrice(room.price)}</span>
               {room.originalPrice && <span className="text-sm text-muted-foreground line-through">{formatPrice(room.originalPrice)}</span>}
