@@ -378,6 +378,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "room.fillCard": "Fill in all card details",
     "room.duplicateReservation": "A reservation already exists for these dates",
     "room.reviewSent": "Review submitted!",
+    "room.datesUnavailable": "These dates are already booked",
+    "room.fullyBooked": "Room Unavailable",
+    "room.fullyBookedDesc": "All dates for the next 6 months are fully booked.",
+
+    "myRooms.reservations": "Reservations for this room",
+    "myRooms.noReservations": "No reservations yet.",
+    "myRooms.anonymousGuest": "Guest",
+    "myRooms.discount": "Discount",
 
     "favorites.title": "My Favorites",
     "favorites.subtitle": "Rooms you've saved",
