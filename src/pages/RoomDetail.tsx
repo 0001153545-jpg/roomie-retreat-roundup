@@ -96,6 +96,25 @@ const RoomDetail = () => {
       .then(({ data }) => { if (data) setUserReservations(data); });
   }, [user, id]);
 
+  // Load all reservations for this room to block overlapping dates
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("reservations").select("check_in, check_out, status").eq("room_id", id).neq("status", "cancelled")
+      .then(({ data }) => {
+        if (data) {
+          const ranges = data.map((r: any) => ({ start: new Date(r.check_in), end: new Date(r.check_out) }));
+          setBookedDates(ranges);
+          // Check if fully booked for next 6 months
+          const totalBookedDays = ranges.reduce((sum, r) => {
+            const days = Math.ceil((r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24));
+            return sum + days;
+          }, 0);
+          const totalDaysIn6Months = 180;
+          setRoomFullyBooked(totalBookedDays >= totalDaysIn6Months);
+        }
+      });
+  }, [id]);
+
   if (!room) {
     return (
       <div className="container-page py-20 text-center">
