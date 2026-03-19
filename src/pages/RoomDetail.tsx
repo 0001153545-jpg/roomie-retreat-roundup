@@ -68,6 +68,8 @@ const RoomDetail = () => {
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [guestOpen, setGuestOpen] = useState(false);
+  const [bookedDates, setBookedDates] = useState<{ start: Date; end: Date }[]>([]);
+  const [roomFullyBooked, setRoomFullyBooked] = useState(false);
 
   const today = startOfDay(new Date());
   const maxDate = addMonths(today, 6);
@@ -82,6 +84,14 @@ const RoomDetail = () => {
 
   const translateAmenity = (a: string) => amenityTranslations[a]?.[language] || a;
 
+  const isDateBooked = (date: Date) => {
+    return bookedDates.some(r => date >= r.start && date < r.end);
+  };
+
+  const hasOverlap = (checkIn: Date, checkOut: Date) => {
+    return bookedDates.some(r => checkIn < r.end && checkOut > r.start);
+  };
+
   useEffect(() => {
     if (!id) return;
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
@@ -93,6 +103,25 @@ const RoomDetail = () => {
     supabase.from("reservations").select("*").eq("user_id", user.id).eq("room_id", id)
       .then(({ data }) => { if (data) setUserReservations(data); });
   }, [user, id]);
+
+  // Load all reservations for this room to block overlapping dates
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("reservations").select("check_in, check_out, status").eq("room_id", id).neq("status", "cancelled")
+      .then(({ data }) => {
+        if (data) {
+          const ranges = data.map((r: any) => ({ start: new Date(r.check_in), end: new Date(r.check_out) }));
+          setBookedDates(ranges);
+          // Check if fully booked for next 6 months
+          const totalBookedDays = ranges.reduce((sum, r) => {
+            const days = Math.ceil((r.end.getTime() - r.start.getTime()) / (1000 * 60 * 60 * 24));
+            return sum + days;
+          }, 0);
+          const totalDaysIn6Months = 180;
+          setRoomFullyBooked(totalBookedDays >= totalDaysIn6Months);
+        }
+      });
+  }, [id]);
 
   if (!room) {
     return (
@@ -118,6 +147,7 @@ const RoomDetail = () => {
     if (!checkInDate || !checkOutDate) { toast.error(t("room.selectDates")); return; }
     if (checkOutDate <= checkInDate) { toast.error(t("room.checkOutAfter")); return; }
     if (totalGuests > room.guests) { toast.error(t("room.tooManyGuests")); return; }
+    if (hasOverlap(checkInDate, checkOutDate)) { toast.error(t("room.datesUnavailable")); return; }
 
     if (paymentMethod !== "pix") {
       if (!cardForm.number || !cardForm.name || !cardForm.expiry || !cardForm.cvv) {
@@ -132,7 +162,11 @@ const RoomDetail = () => {
       user_id: user.id, room_id: room.id, room_title: room.title,
       check_in: format(checkInDate, "yyyy-MM-dd"), check_out: format(checkOutDate, "yyyy-MM-dd"),
       guests: totalGuests, subtotal, fee, total,
-    });
+      payment_method: paymentMethod,
+      currency,
+      adults,
+      children_ages: children,
+    } as any);
     setReserving(false);
 
     if (error) {
@@ -267,6 +301,13 @@ const RoomDetail = () => {
         {/* Booking sidebar */}
         <div>
           <div className="sticky top-20 rounded-xl border border-border bg-card p-5 shadow-elevated">
+            {roomFullyBooked ? (
+              <div className="text-center py-6">
+                <p className="text-lg font-semibold text-destructive">{t("room.fullyBooked")}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t("room.fullyBookedDesc")}</p>
+              </div>
+            ) : (
+            <>
             <div className="mb-4 flex items-baseline gap-2">
               <span className="font-heading text-2xl font-bold text-foreground">{formatPrice(room.price)}</span>
               {room.originalPrice && <span className="text-sm text-muted-foreground line-through">{formatPrice(room.originalPrice)}</span>}
@@ -289,7 +330,7 @@ const RoomDetail = () => {
                       mode="single"
                       selected={checkInDate}
                       onSelect={(d) => { setCheckInDate(d); setCheckInOpen(false); if (d && checkOutDate && checkOutDate <= d) setCheckOutDate(undefined); }}
-                      disabled={(date) => isBefore(date, today) || date > maxDate}
+                      disabled={(date) => isBefore(date, today) || date > maxDate || isDateBooked(date)}
                       locale={dateLocale}
                       initialFocus
                       className="p-3 pointer-events-auto"
@@ -313,7 +354,7 @@ const RoomDetail = () => {
                       mode="single"
                       selected={checkOutDate}
                       onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
-                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate}
+                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate || isDateBooked(date)}
                       locale={dateLocale}
                       initialFocus
                       className="p-3 pointer-events-auto"
@@ -435,6 +476,8 @@ const RoomDetail = () => {
                 <Share2 className="h-3.5 w-3.5" /> {t("room.share")}
               </button>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>

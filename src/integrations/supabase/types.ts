@@ -40,9 +40,11 @@ export type Database = {
           city: string
           created_at: string
           description: string | null
+          discount_percent: number | null
           guests: number
           id: string
           image_url: string | null
+          images: string[] | null
           price: number
           state: string
           title: string
@@ -53,9 +55,11 @@ export type Database = {
           city: string
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           guests?: number
           id?: string
           image_url?: string | null
+          images?: string[] | null
           price: number
           state?: string
           title: string
@@ -66,9 +70,11 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           guests?: number
           id?: string
           image_url?: string | null
+          images?: string[] | null
           price?: number
           state?: string
           title?: string
@@ -112,12 +118,16 @@ export type Database = {
       }
       reservations: {
         Row: {
+          adults: number | null
           check_in: string
           check_out: string
+          children_ages: number[] | null
           created_at: string
+          currency: string | null
           fee: number
           guests: number
           id: string
+          payment_method: string | null
           room_id: string
           room_title: string
           status: string
@@ -126,12 +136,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          adults?: number | null
           check_in: string
           check_out: string
+          children_ages?: number[] | null
           created_at?: string
+          currency?: string | null
           fee: number
           guests?: number
           id?: string
+          payment_method?: string | null
           room_id: string
           room_title: string
           status?: string
@@ -140,12 +154,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          adults?: number | null
           check_in?: string
           check_out?: string
+          children_ages?: number[] | null
           created_at?: string
+          currency?: string | null
           fee?: number
           guests?: number
           id?: string
+          payment_method?: string | null
           room_id?: string
           room_title?: string
           status?: string

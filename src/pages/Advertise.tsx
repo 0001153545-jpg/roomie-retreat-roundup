@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, Camera, DollarSign, BarChart3, Upload } from "lucide-react";
+import { Building2, Camera, DollarSign, BarChart3, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,22 +8,16 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Listing {
-  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; created_at: string; description: string | null;
-}
-
 const Advertise = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { formatPrice, symbol } = useCurrency();
+  const { symbol } = useCurrency();
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
-  const [showMyRooms, setShowMyRooms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [myListings, setMyListings] = useState<Listing[]>([]);
   const [accountType, setAccountType] = useState("guest");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [form, setForm] = useState({
     title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "",
   });
@@ -31,21 +25,8 @@ const Advertise = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
-      .then(({ data }) => {
-        if (data) setAccountType(data.account_type);
-      });
+      .then(({ data }) => { if (data) setAccountType(data.account_type); });
   }, [user]);
-
-  const loadMyListings = async () => {
-    if (!user) return;
-    const { data } = await supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    if (data) setMyListings(data as Listing[]);
-  };
-
-  useEffect(() => {
-    if (!user || !showMyRooms) return;
-    loadMyListings();
-  }, [user, showMyRooms]);
 
   const steps = [
     { icon: Building2, title: t("advertise.step1"), desc: t("advertise.step1Desc") },
@@ -55,8 +36,17 @@ const Advertise = () => {
   ];
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) { setImageFile(file); setImagePreview(URL.createObjectURL(file)); }
+    const files = Array.from(e.target.files || []);
+    const remaining = 3 - imageFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (toAdd.length === 0) return;
+    setImageFiles(prev => [...prev, ...toAdd]);
+    setImagePreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))]);
+  };
+
+  const removeImage = (i: number) => {
+    setImageFiles(prev => prev.filter((_, idx) => idx !== i));
+    setImagePreviews(prev => prev.filter((_, idx) => idx !== i));
   };
 
   const handlePriceChange = (value: string) => {
@@ -75,20 +65,19 @@ const Advertise = () => {
     if (!form.title || !form.city || !form.price) { toast.error(t("advertise.fillRequired")); return; }
 
     setSubmitting(true);
-    let imageUrl = "";
+    const uploadedUrls: string[] = [];
 
-    if (imageFile) {
-      const ext = imageFile.name.split(".").pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from("property-images").upload(path, imageFile);
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage.from("property-images").getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
-      } else {
+    for (const file of imageFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("property-images").upload(path, file);
+      if (uploadError) {
         toast.error("Erro no upload: " + uploadError.message);
         setSubmitting(false);
         return;
       }
+      const { data: urlData } = supabase.storage.from("property-images").getPublicUrl(path);
+      uploadedUrls.push(urlData.publicUrl);
     }
 
     const { error } = await supabase.from("listings").insert({
@@ -100,8 +89,9 @@ const Advertise = () => {
       price: Number(form.price),
       guests: Number(form.guests),
       description: form.description || "",
-      image_url: imageUrl,
-    });
+      image_url: uploadedUrls[0] || "",
+      images: uploadedUrls,
+    } as any);
 
     setSubmitting(false);
 
@@ -112,11 +102,10 @@ const Advertise = () => {
         description: `${form.title} — ${form.city}, ${form.state}`,
       });
       setShowForm(false);
-      setShowMyRooms(true);
       setForm({ title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "" });
-      setImageFile(null);
-      setImagePreview("");
-      loadMyListings();
+      setImageFiles([]);
+      setImagePreviews([]);
+      navigate("/meus-quartos");
     }
   };
 
@@ -153,32 +142,11 @@ const Advertise = () => {
           </Button>
         )}
         {user && accountType === "owner" && (
-          <Button size="lg" variant="outline" onClick={() => setShowMyRooms(!showMyRooms)}>
+          <Button size="lg" variant="outline" onClick={() => navigate("/meus-quartos")}>
             {t("advertise.viewMyRooms")}
           </Button>
         )}
       </div>
-
-      {showMyRooms && (
-        <div className="mx-auto mt-8 max-w-3xl">
-          <h2 className="mb-4 font-heading text-xl font-bold text-foreground">{t("advertise.myRooms")}</h2>
-          {myListings.length === 0 ? (
-            <p className="text-muted-foreground">{t("advertise.noRooms")}</p>
-          ) : (
-            <div className="space-y-3">
-              {myListings.map((l) => (
-                <div key={l.id} className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
-                  {l.image_url && <img src={l.image_url} alt={l.title} className="h-16 w-24 rounded-lg object-cover" />}
-                  <div className="flex-1">
-                    <h3 className="font-heading text-base font-semibold text-foreground">{l.title}</h3>
-                    <p className="text-xs text-muted-foreground">{l.city}, {l.state} · {l.type} · {formatPrice(l.price)}/{t("room.perNight")}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {showForm && (
         <div className="mx-auto mt-8 max-w-xl rounded-xl border border-border bg-card p-6 shadow-elevated">
@@ -225,14 +193,23 @@ const Advertise = () => {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.photo")}</label>
-              <div className="flex items-center gap-4">
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary transition-colors">
-                  <Upload className="h-4 w-4" />
-                  {imageFile ? imageFile.name : t("advertise.selectPhoto")}
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                </label>
-                {imagePreview && <img src={imagePreview} alt="Preview" className="h-16 w-24 rounded-lg object-cover" />}
+              <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.photo")} ({imageFiles.length}/3)</label>
+              <div className="flex flex-wrap items-center gap-3">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="relative">
+                    <img src={src} alt={`Preview ${i + 1}`} className="h-20 w-28 rounded-lg object-cover" />
+                    <button type="button" onClick={() => removeImage(i)} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {imageFiles.length < 3 && (
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground hover:border-primary transition-colors">
+                    <Upload className="h-4 w-4" />
+                    {t("advertise.selectPhoto")}
+                    <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
+                  </label>
+                )}
               </div>
             </div>
 

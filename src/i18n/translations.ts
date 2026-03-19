@@ -116,6 +116,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "room.fillCard": "Preencha todos os dados do cartão",
     "room.duplicateReservation": "Já existe uma reserva para este quarto nestas datas",
     "room.reviewSent": "Avaliação enviada!",
+    "room.datesUnavailable": "Essas datas já estão reservadas",
+    "room.fullyBooked": "Quarto Indisponível",
+    "room.fullyBookedDesc": "Todas as datas dos próximos 6 meses já estão preenchidas.",
+
+    "myRooms.reservations": "Reservas deste quarto",
+    "myRooms.noReservations": "Nenhuma reserva ainda.",
+    "myRooms.anonymousGuest": "Hóspede",
+    "myRooms.discount": "Desconto",
 
     "favorites.title": "Meus Favoritos",
     "favorites.subtitle": "Quartos que você salvou",
@@ -370,6 +378,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "room.fillCard": "Fill in all card details",
     "room.duplicateReservation": "A reservation already exists for these dates",
     "room.reviewSent": "Review submitted!",
+    "room.datesUnavailable": "These dates are already booked",
+    "room.fullyBooked": "Room Unavailable",
+    "room.fullyBookedDesc": "All dates for the next 6 months are fully booked.",
+
+    "myRooms.reservations": "Reservations for this room",
+    "myRooms.noReservations": "No reservations yet.",
+    "myRooms.anonymousGuest": "Guest",
+    "myRooms.discount": "Discount",
 
     "favorites.title": "My Favorites",
     "favorites.subtitle": "Rooms you've saved",
@@ -623,6 +639,14 @@ export const translations: Record<Language, Record<string, string>> = {
     "room.fillCard": "Complete todos los datos de la tarjeta",
     "room.duplicateReservation": "Ya existe una reserva para estas fechas",
     "room.reviewSent": "¡Reseña enviada!",
+    "room.datesUnavailable": "Estas fechas ya están reservadas",
+    "room.fullyBooked": "Habitación No Disponible",
+    "room.fullyBookedDesc": "Todas las fechas de los próximos 6 meses están ocupadas.",
+
+    "myRooms.reservations": "Reservas de esta habitación",
+    "myRooms.noReservations": "Sin reservas aún.",
+    "myRooms.anonymousGuest": "Huésped",
+    "myRooms.discount": "Descuento",
 
     "favorites.title": "Mis Favoritos",
     "favorites.subtitle": "Habitaciones que guardaste",
