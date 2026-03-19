@@ -68,6 +68,8 @@ const RoomDetail = () => {
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [guestOpen, setGuestOpen] = useState(false);
+  const [bookedDates, setBookedDates] = useState<{ start: Date; end: Date }[]>([]);
+  const [roomFullyBooked, setRoomFullyBooked] = useState(false);
 
   const today = startOfDay(new Date());
   const maxDate = addMonths(today, 6);
