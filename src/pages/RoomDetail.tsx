@@ -475,8 +475,10 @@ const RoomDetail = () => {
               <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success(t("common.linkCopied")); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 <Share2 className="h-3.5 w-3.5" /> {t("room.share")}
               </button>
-            </div>
+            </>
+            )}
           </div>
+        </div>
         </div>
       </div>
     </div>
