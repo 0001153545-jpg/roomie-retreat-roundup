@@ -147,6 +147,7 @@ const RoomDetail = () => {
     if (!checkInDate || !checkOutDate) { toast.error(t("room.selectDates")); return; }
     if (checkOutDate <= checkInDate) { toast.error(t("room.checkOutAfter")); return; }
     if (totalGuests > room.guests) { toast.error(t("room.tooManyGuests")); return; }
+    if (hasOverlap(checkInDate, checkOutDate)) { toast.error(t("room.datesUnavailable")); return; }
 
     if (paymentMethod !== "pix") {
       if (!cardForm.number || !cardForm.name || !cardForm.expiry || !cardForm.cvv) {
@@ -161,7 +162,11 @@ const RoomDetail = () => {
       user_id: user.id, room_id: room.id, room_title: room.title,
       check_in: format(checkInDate, "yyyy-MM-dd"), check_out: format(checkOutDate, "yyyy-MM-dd"),
       guests: totalGuests, subtotal, fee, total,
-    });
+      payment_method: paymentMethod,
+      currency,
+      adults,
+      children_ages: children,
+    } as any);
     setReserving(false);
 
     if (error) {
