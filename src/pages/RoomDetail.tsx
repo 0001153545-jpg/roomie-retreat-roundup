@@ -84,6 +84,14 @@ const RoomDetail = () => {
 
   const translateAmenity = (a: string) => amenityTranslations[a]?.[language] || a;
 
+  const isDateBooked = (date: Date) => {
+    return bookedDates.some(r => date >= r.start && date < r.end);
+  };
+
+  const hasOverlap = (checkIn: Date, checkOut: Date) => {
+    return bookedDates.some(r => checkIn < r.end && checkOut > r.start);
+  };
+
   useEffect(() => {
     if (!id) return;
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
