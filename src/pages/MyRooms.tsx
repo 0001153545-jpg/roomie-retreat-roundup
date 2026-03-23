@@ -7,11 +7,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image } from "lucide-react";
 import { toast } from "sonner";
 
 interface Listing {
-  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number;
+  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number; description: string | null;
 }
 
 interface Reservation {
@@ -21,6 +21,8 @@ interface Reservation {
 interface Profile {
   full_name: string | null; user_id: string;
 }
+
+const COMMISSION_RATE = 0.20;
 
 const MyRooms = () => {
   const { user, loading } = useAuth();
@@ -35,6 +37,9 @@ const MyRooms = () => {
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState("");
   const [editDiscount, setEditDiscount] = useState("");
+  const [updatingPhotos, setUpdatingPhotos] = useState<string | null>(null);
+  const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([]);
+  const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([]);
 
   useEffect(() => { if (!loading && !user) navigate("/login"); }, [user, loading, navigate]);
 
@@ -52,8 +57,6 @@ const MyRooms = () => {
     const { data } = await supabase.from("reservations").select("*").eq("room_id", listingId).order("created_at", { ascending: false }) as any;
     const res = (data || []) as Reservation[];
     setReservations(prev => ({ ...prev, [listingId]: res }));
-
-    // Load profiles for users who reserved
     const userIds = [...new Set(res.map(r => r.user_id))];
     if (userIds.length > 0) {
       const { data: profileData } = await supabase.from("profiles").select("full_name, user_id").in("user_id", userIds);
@@ -81,12 +84,69 @@ const MyRooms = () => {
     const newPrice = Number(editPrice);
     const newDiscount = Math.min(100, Math.max(0, Number(editDiscount) || 0));
     if (isNaN(newPrice) || newPrice <= 0) { toast.error(t("advertise.fillRequired")); return; }
-
     const { error } = await supabase.from("listings").update({ price: newPrice, discount_percent: newDiscount } as any).eq("id", l.id);
     if (error) { toast.error(error.message); return; }
     setListings(prev => prev.map(x => x.id === l.id ? { ...x, price: newPrice, discount_percent: newDiscount } : x));
     setEditingRoom(null);
     toast.success(t("advertise.success"));
+  };
+
+  const handleDelete = async (l: Listing) => {
+    const roomRes = reservations[l.id];
+    if (!roomRes) {
+      // Load reservations first to check
+      const { data } = await supabase.from("reservations").select("id").eq("room_id", l.id).limit(1);
+      if (data && data.length > 0) {
+        toast.error(t("myRooms.cannotDelete"));
+        return;
+      }
+    } else if (roomRes.length > 0) {
+      toast.error(t("myRooms.cannotDelete"));
+      return;
+    }
+
+    const { error } = await supabase.from("listings").delete().eq("id", l.id);
+    if (error) { toast.error(error.message); return; }
+    setListings(prev => prev.filter(x => x.id !== l.id));
+    toast.success(t("myRooms.deleted"));
+  };
+
+  const startPhotoUpdate = (l: Listing) => {
+    setUpdatingPhotos(l.id);
+    setNewPhotoFiles([]);
+    setNewPhotoPreviews([]);
+  };
+
+  const handleNewPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 3 - newPhotoFiles.length;
+    const toAdd = files.slice(0, remaining);
+    if (toAdd.length === 0) return;
+    setNewPhotoFiles(prev => [...prev, ...toAdd]);
+    setNewPhotoPreviews(prev => [...prev, ...toAdd.map(f => URL.createObjectURL(f))]);
+  };
+
+  const removeNewPhoto = (i: number) => {
+    setNewPhotoFiles(prev => prev.filter((_, idx) => idx !== i));
+    setNewPhotoPreviews(prev => prev.filter((_, idx) => idx !== i));
+  };
+
+  const savePhotos = async (l: Listing) => {
+    if (!user || newPhotoFiles.length === 0) { setUpdatingPhotos(null); return; }
+    const uploadedUrls: string[] = [];
+    for (const file of newPhotoFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("property-images").upload(path, file);
+      if (uploadError) { toast.error("Upload error: " + uploadError.message); return; }
+      const { data: urlData } = supabase.storage.from("property-images").getPublicUrl(path);
+      uploadedUrls.push(urlData.publicUrl);
+    }
+    const { error } = await supabase.from("listings").update({ images: uploadedUrls, image_url: uploadedUrls[0] || l.image_url } as any).eq("id", l.id);
+    if (error) { toast.error(error.message); return; }
+    setListings(prev => prev.map(x => x.id === l.id ? { ...x, images: uploadedUrls, image_url: uploadedUrls[0] || x.image_url } : x));
+    setUpdatingPhotos(null);
+    toast.success(t("myRooms.photosUpdated"));
   };
 
   const paymentLabel = (method: string) => {
@@ -117,6 +177,7 @@ const MyRooms = () => {
             const isExpanded = expandedRoom === l.id;
             const roomRes = reservations[l.id] || [];
             const isEditing = editingRoom === l.id;
+            const isUpdatingPhotos = updatingPhotos === l.id;
             const effectivePrice = l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price;
 
             return (
@@ -138,7 +199,7 @@ const MyRooms = () => {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {!isEditing ? (
                       <Button variant="ghost" size="sm" onClick={() => startEdit(l)}><Edit2 className="h-4 w-4" /></Button>
                     ) : (
@@ -147,6 +208,12 @@ const MyRooms = () => {
                         <Button variant="ghost" size="sm" onClick={() => setEditingRoom(null)}><X className="h-4 w-4" /></Button>
                       </div>
                     )}
+                    <Button variant="ghost" size="sm" onClick={() => startPhotoUpdate(l)} title={t("myRooms.updatePhotos")}>
+                      <Image className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(l)} className="text-destructive hover:text-destructive" title={t("myRooms.delete")}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => toggleExpand(l.id)}>
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
@@ -176,6 +243,43 @@ const MyRooms = () => {
                   </div>
                 )}
 
+                {isUpdatingPhotos && (
+                  <div className="border-t border-border bg-muted/30 p-4">
+                    <p className="mb-2 text-sm font-medium text-foreground">{t("myRooms.updatePhotos")}</p>
+                    {l.images.length > 0 && (
+                      <div className="mb-3">
+                        <p className="mb-1 text-xs text-muted-foreground">{t("myRooms.currentPhotos")}</p>
+                        <div className="flex gap-2">
+                          {l.images.map((img, i) => (
+                            <img key={i} src={img} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3">
+                      {newPhotoPreviews.map((src, i) => (
+                        <div key={i} className="relative">
+                          <img src={src} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                          <button type="button" onClick={() => removeNewPhoto(i)} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {newPhotoFiles.length < 3 && (
+                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-input bg-background px-3 py-2 text-xs text-muted-foreground hover:border-primary transition-colors">
+                          <Upload className="h-3 w-3" />
+                          {t("advertise.selectPhoto")}
+                          <input type="file" accept="image/*" multiple onChange={handleNewPhotoChange} className="hidden" />
+                        </label>
+                      )}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button size="sm" onClick={() => savePhotos(l)}>{t("myRooms.savePhotos")}</Button>
+                      <Button size="sm" variant="outline" onClick={() => setUpdatingPhotos(null)}>{t("common.cancel")}</Button>
+                    </div>
+                  </div>
+                )}
+
                 {isExpanded && (
                   <div className="border-t border-border p-4">
                     <h4 className="mb-3 font-heading text-sm font-semibold text-foreground">{t("myRooms.reservations")}</h4>
@@ -185,6 +289,8 @@ const MyRooms = () => {
                       <div className="space-y-3">
                         {roomRes.map((r) => {
                           const guest = profiles[r.user_id];
+                          const commission = r.total * COMMISSION_RATE;
+                          const netAmount = r.total - commission;
                           return (
                             <div key={r.id} className="rounded-lg border border-border bg-background p-3">
                               <div className="flex items-start justify-between gap-2">
@@ -208,9 +314,10 @@ const MyRooms = () => {
                                     <span>{r.currency || "BRL"}</span>
                                   </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right space-y-0.5">
                                   <p className="text-sm font-semibold text-foreground">{formatPrice(r.total)}</p>
-                                  <p className="text-xs text-muted-foreground">{t("room.total")}</p>
+                                  <p className="text-xs text-destructive">-{t("myRooms.commission")} (20%): {formatPrice(commission)}</p>
+                                  <p className="text-xs font-medium text-primary">{t("myRooms.netAmount")}: {formatPrice(netAmount)}</p>
                                 </div>
                               </div>
                             </div>

@@ -24,8 +24,20 @@ const Advertise = () => {
 
   useEffect(() => {
     if (!user) return;
+    // Check profile first, then fallback to user metadata
     supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
-      .then(({ data }) => { if (data) setAccountType(data.account_type); });
+      .then(async ({ data }) => {
+        const profileType = data?.account_type || "guest";
+        const metaType = user.user_metadata?.account_type || "guest";
+        
+        // If metadata says owner but profile says guest, fix the profile
+        if (metaType === "owner" && profileType !== "owner") {
+          await supabase.from("profiles").update({ account_type: "owner" } as any).eq("user_id", user.id);
+          setAccountType("owner");
+        } else {
+          setAccountType(profileType);
+        }
+      });
   }, [user]);
 
   const steps = [
