@@ -50,8 +50,10 @@ const RoomDetail = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t, language } = useLanguage();
   const { formatPrice, currency } = useCurrency();
-  const room = rooms.find((r) => r.id === id);
+  const mockRoom = rooms.find((r) => r.id === id);
   const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
+  const [dbRoom, setDbRoom] = useState<typeof rooms[0] | null>(null);
+  const room = mockRoom || dbRoom;
 
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
@@ -91,6 +93,34 @@ const RoomDetail = () => {
   const hasOverlap = (checkIn: Date, checkOut: Date) => {
     return bookedDates.some(r => checkIn < r.end && checkOut > r.start);
   };
+
+  // Load DB listing if not a mock room
+  useEffect(() => {
+    if (mockRoom || !id) return;
+    supabase.from("listings").select("*").eq("id", id).single().then(({ data }) => {
+      if (data) {
+        const l = data as any;
+        setDbRoom({
+          id: l.id,
+          title: l.title,
+          description: l.description || "",
+          city: l.city,
+          state: l.state,
+          price: l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price,
+          originalPrice: l.discount_percent > 0 ? l.price : undefined,
+          rating: 4.5,
+          reviewCount: 0,
+          guests: l.guests,
+          image: l.image_url || "/placeholder.svg",
+          images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
+          amenities: ["Wi-Fi"],
+          type: l.type,
+          host: l.title,
+          hostAvatar: l.title.slice(0, 2).toUpperCase(),
+        });
+      }
+    });
+  }, [id, mockRoom]);
 
   useEffect(() => {
     if (!id) return;
