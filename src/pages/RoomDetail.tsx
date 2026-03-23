@@ -50,8 +50,10 @@ const RoomDetail = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t, language } = useLanguage();
   const { formatPrice, currency } = useCurrency();
-  const room = rooms.find((r) => r.id === id);
+  const mockRoom = rooms.find((r) => r.id === id);
   const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
+  const [dbRoom, setDbRoom] = useState<typeof rooms[0] | null>(null);
+  const room = mockRoom || dbRoom;
 
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
