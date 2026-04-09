@@ -10,8 +10,6 @@ const OffersSection = () => {
   const [dbListings, setDbListings] = useState<Room[]>([]);
 
   useEffect(() => {
-    supabase.from("listings").select("*").eq("discount_percent", 0).not("discount_percent", "gt", 0)
-      // fetch all, filter client-side for discounts
     supabase.from("listings").select("*").then(({ data }) => {
       if (data) {
         const converted: Room[] = data
