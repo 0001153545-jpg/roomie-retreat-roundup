@@ -24,8 +24,20 @@ import MyReservations from "./pages/MyReservations";
 import Favorites from "./pages/Favorites";
 import MyRooms from "./pages/MyRooms";
 import NotFound from "./pages/NotFound";
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminRooms from "@/pages/admin/AdminRooms";
+import AdminFinancial from "@/pages/admin/AdminFinancial";
 
 const queryClient = new QueryClient();
+
+const AdminWrapper = ({ children }: { children: React.ReactNode }) => (
+  <AdminGuard>
+    <AdminLayout>{children}</AdminLayout>
+  </AdminGuard>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,27 +49,40 @@ const App = () => (
           <LanguageProvider>
             <CurrencyProvider>
               <AuthProvider>
-                <Header />
-                <main className="min-h-screen">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/buscar" element={<SearchRooms />} />
-                    <Route path="/quarto/:id" element={<RoomDetail />} />
-                    <Route path="/explorar" element={<Explore />} />
-                    <Route path="/anunciar" element={<Advertise />} />
-                    <Route path="/sobre" element={<About />} />
-                    <Route path="/contato" element={<Contact />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/cadastro" element={<Register />} />
-                    <Route path="/termos" element={<Terms />} />
-                    <Route path="/privacidade" element={<Privacy />} />
-                    <Route path="/minhas-reservas" element={<MyReservations />} />
-                    <Route path="/favoritos" element={<Favorites />} />
-                    <Route path="/meus-quartos" element={<MyRooms />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-                <Footer />
+                <Routes>
+                  {/* Admin routes - no Header/Footer */}
+                  <Route path="/admin" element={<AdminWrapper><AdminDashboard /></AdminWrapper>} />
+                  <Route path="/admin/usuarios" element={<AdminWrapper><AdminUsers /></AdminWrapper>} />
+                  <Route path="/admin/quartos" element={<AdminWrapper><AdminRooms /></AdminWrapper>} />
+                  <Route path="/admin/financeiro" element={<AdminWrapper><AdminFinancial /></AdminWrapper>} />
+
+                  {/* Public routes */}
+                  <Route path="*" element={
+                    <>
+                      <Header />
+                      <main className="min-h-screen">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/buscar" element={<SearchRooms />} />
+                          <Route path="/quarto/:id" element={<RoomDetail />} />
+                          <Route path="/explorar" element={<Explore />} />
+                          <Route path="/anunciar" element={<Advertise />} />
+                          <Route path="/sobre" element={<About />} />
+                          <Route path="/contato" element={<Contact />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/cadastro" element={<Register />} />
+                          <Route path="/termos" element={<Terms />} />
+                          <Route path="/privacidade" element={<Privacy />} />
+                          <Route path="/minhas-reservas" element={<MyReservations />} />
+                          <Route path="/favoritos" element={<Favorites />} />
+                          <Route path="/meus-quartos" element={<MyRooms />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+                      <Footer />
+                    </>
+                  } />
+                </Routes>
               </AuthProvider>
             </CurrencyProvider>
           </LanguageProvider>
