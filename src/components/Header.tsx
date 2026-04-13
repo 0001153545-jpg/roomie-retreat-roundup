@@ -12,6 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import type { Language } from "@/i18n/translations";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/components/admin/AdminGuard";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
