@@ -163,6 +163,11 @@ const Header = () => {
                 {accountType === "owner" && (
                   <Link to="/meus-quartos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myRooms")}</Link>
                 )}
+                {isAdminEmail(user.email) && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-primary hover:bg-muted flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" /> Painel Admin
+                  </Link>
+                )}
               </>
             )}
             <div className="mt-2 flex flex-col gap-2 border-t border-border pt-2">
