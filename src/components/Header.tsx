@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
@@ -12,6 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import type { Language } from "@/i18n/translations";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/components/admin/AdminGuard";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -122,6 +123,11 @@ const Header = () => {
                     <Building2 className="mr-2 h-4 w-4" /> {t("nav.myRooms")}
                   </DropdownMenuItem>
                 )}
+                {isAdminEmail(user.email) && (
+                  <DropdownMenuItem onClick={() => navigate("/admin")}>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Painel Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
@@ -156,6 +162,11 @@ const Header = () => {
                 <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myReservations")}</Link>
                 {accountType === "owner" && (
                   <Link to="/meus-quartos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myRooms")}</Link>
+                )}
+                {isAdminEmail(user.email) && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-primary hover:bg-muted flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" /> Painel Admin
+                  </Link>
                 )}
               </>
             )}
