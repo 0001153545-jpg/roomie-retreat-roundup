@@ -123,6 +123,11 @@ const Header = () => {
                     <Building2 className="mr-2 h-4 w-4" /> {t("nav.myRooms")}
                   </DropdownMenuItem>
                 )}
+                {isAdminEmail(user.email) && (
+                  <DropdownMenuItem onClick={() => navigate("/admin")}>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Painel Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
