@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
