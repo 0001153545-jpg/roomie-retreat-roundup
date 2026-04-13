@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Building2, DollarSign, LogOut } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ function AdminSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -62,10 +63,24 @@ function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-2">
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={signOut}>
+      <SidebarFooter className="p-2 space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/")}
+        >
+          <Home className="h-4 w-4" />
+          {!collapsed && "Voltar ao site"}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={signOut}
+        >
           <LogOut className="h-4 w-4" />
-          {!collapsed && "Sair"}
+          {!collapsed && "Sair da conta"}
         </Button>
       </SidebarFooter>
     </Sidebar>
