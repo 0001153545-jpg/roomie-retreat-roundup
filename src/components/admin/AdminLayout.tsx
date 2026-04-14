@@ -19,11 +19,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert } from "lucide-react";
+
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
   { title: "Quartos", url: "/admin/quartos", icon: Building2 },
   { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign },
+  { title: "Resiliência", url: "/admin/resiliencia", icon: ShieldAlert },
 ];
 
 function AdminSidebar() {
