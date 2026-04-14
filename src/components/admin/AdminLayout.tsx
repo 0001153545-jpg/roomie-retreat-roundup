@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
   { title: "Quartos", url: "/admin/quartos", icon: Building2 },
   { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign },
-  { title: "Resiliência", url: "/admin/resiliencia", icon: ShieldAlert },
 ];
 
 function AdminSidebar() {

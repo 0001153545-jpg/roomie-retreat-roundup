@@ -30,7 +30,6 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRooms from "@/pages/admin/AdminRooms";
 import AdminFinancial from "@/pages/admin/AdminFinancial";
-import AdminResilience from "@/pages/admin/AdminResilience";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +55,6 @@ const App = () => (
                   <Route path="/admin/usuarios" element={<AdminWrapper><AdminUsers /></AdminWrapper>} />
                   <Route path="/admin/quartos" element={<AdminWrapper><AdminRooms /></AdminWrapper>} />
                   <Route path="/admin/financeiro" element={<AdminWrapper><AdminFinancial /></AdminWrapper>} />
-                  <Route path="/admin/resiliencia" element={<AdminWrapper><AdminResilience /></AdminWrapper>} />
 
                   {/* Public routes */}
                   <Route path="*" element={
