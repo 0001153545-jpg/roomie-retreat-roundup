@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Search, Trash2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
+  email: string | null;
   account_type: string;
   created_at: string;
   phone: string | null;
@@ -25,7 +26,7 @@ const AdminUsers = () => {
 
   const load = async () => {
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-    setProfiles(data || []);
+    setProfiles((data as Profile[]) || []);
     setLoading(false);
   };
 
@@ -33,19 +34,22 @@ const AdminUsers = () => {
 
   const filtered = useMemo(() => {
     return profiles.filter((p) => {
-      const matchSearch = !search || (p.full_name?.toLowerCase().includes(search.toLowerCase()) || p.user_id.includes(search));
+      const matchSearch = !search || (
+        p.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.email?.toLowerCase().includes(search.toLowerCase()) ||
+        p.user_id.includes(search)
+      );
       const matchType = filterType === "all" || p.account_type === filterType;
       return matchSearch && matchType;
     });
   }, [profiles, search, filterType]);
 
   const handleDelete = async (profile: Profile) => {
-    // We can only delete the profile row (not the auth user from client side)
     const { error } = await supabase.from("profiles").delete().eq("id", profile.id);
     if (error) {
-      toast({ title: "Erro", description: "Não foi possível excluir o perfil.", variant: "destructive" });
+      toast.error("Não foi possível excluir o perfil.");
     } else {
-      toast({ title: "Perfil excluído com sucesso" });
+      toast.success("Perfil excluído com sucesso");
       setProfiles((prev) => prev.filter((p) => p.id !== profile.id));
     }
   };
@@ -61,7 +65,7 @@ const AdminUsers = () => {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Buscar por nome, e-mail ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex gap-2">
           {(["all", "guest", "owner"] as const).map((t) => (
@@ -77,7 +81,7 @@ const AdminUsers = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>User ID</TableHead>
+              <TableHead>E-mail</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Data de Cadastro</TableHead>
               <TableHead className="w-16">Ações</TableHead>
@@ -90,7 +94,7 @@ const AdminUsers = () => {
               filtered.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.full_name || "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">{p.user_id.slice(0, 8)}...</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{p.email || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={p.account_type === "owner" ? "default" : "secondary"}>
                       {p.account_type === "owner" ? "Proprietário" : "Hóspede"}
