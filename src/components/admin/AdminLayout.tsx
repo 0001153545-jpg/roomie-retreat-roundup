@@ -19,7 +19,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
