@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home } from "lucide-react";
+import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
