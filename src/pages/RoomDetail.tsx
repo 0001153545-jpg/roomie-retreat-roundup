@@ -216,8 +216,8 @@ const RoomDetail = () => {
   const handleComment = async () => {
     if (!comment.trim()) return;
     if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
-    if (hasReviewed) { toast.error(t("room.alreadyReviewed")); return; }
-    if (!hasCompletedStay) { toast.error(t("room.mustStayFirst")); return; }
+    if (!isAdmin && hasReviewed) { toast.error(t("room.alreadyReviewed")); return; }
+    if (!isAdmin && !hasCompletedStay) { toast.error(t("room.mustStayFirst")); return; }
 
     const { data, error } = await supabase.from("reviews").insert({
       user_id: user.id, room_id: room.id, rating: userRating,
