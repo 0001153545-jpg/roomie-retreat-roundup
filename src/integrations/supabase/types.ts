@@ -88,6 +88,7 @@ export type Database = {
           account_type: string
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -98,6 +99,7 @@ export type Database = {
           account_type?: string
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -108,6 +110,7 @@ export type Database = {
           account_type?: string
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -170,6 +173,33 @@ export type Database = {
           subtotal?: number
           total?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      resilience_backups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          snapshot_data: Json
+          tables_included: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label: string
+          snapshot_data: Json
+          tables_included?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          snapshot_data?: Json
+          tables_included?: string[]
         }
         Relationships: []
       }
