@@ -238,7 +238,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cascade_delete_user_data: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
