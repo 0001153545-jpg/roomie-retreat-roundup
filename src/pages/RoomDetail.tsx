@@ -234,9 +234,16 @@ const RoomDetail = () => {
     }
   };
 
+  const handleDeleteReview = async (reviewId: string) => {
+    const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
+    if (error) { toast.error("Erro ao excluir avaliação"); return; }
+    setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+    toast.success("Avaliação excluída");
+  };
+
   const allReviews = [
-    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10) })),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date })),
+    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true })),
+    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
   ];
 
   return (
