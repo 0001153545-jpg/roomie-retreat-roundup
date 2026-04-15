@@ -318,23 +318,33 @@ const RoomDetail = () => {
           {!isAdmin && user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
-            {allReviews.map((review) => (
-              <div key={review.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{review.userName}</p>
-                    <p className="text-xs text-muted-foreground">{review.date}</p>
+            {allReviews.map((review) => {
+              const canDelete = review.isDb && (isAdmin || (user && review.userId === user.id));
+              return (
+                <div key={review.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{review.userName}</p>
+                      <p className="text-xs text-muted-foreground">{review.date}</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
+                        ))}
+                      </div>
+                      {canDelete && (
+                        <button onClick={() => handleDeleteReview(review.id)} className="ml-2 text-destructive hover:text-destructive/80 transition-colors" title="Excluir avaliação">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-auto flex items-center gap-0.5">
-                    {Array.from({ length: review.rating }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
-                    ))}
-                  </div>
+                  <p className="text-sm text-muted-foreground">{review.comment}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{review.comment}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
