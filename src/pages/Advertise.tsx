@@ -7,6 +7,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useIBGEStates, useIBGECities } from "@/hooks/useIBGE";
+
+const ALL_AMENITIES = [
+  "Wi-Fi", "Ar condicionado", "Estacionamento", "Café da manhã", "Piscina",
+  "Aceita animais", "Spa", "Academia", "Lavanderia", "Jacuzzi", "Terraço",
+  "Concierge 24h", "Praia privativa",
+];
 
 const Advertise = () => {
   const { user } = useAuth();
@@ -18,19 +25,20 @@ const Advertise = () => {
   const [accountType, setAccountType] = useState("guest");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [form, setForm] = useState({
     title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "",
   });
 
+  const { states, loading: statesLoading, error: statesError } = useIBGEStates();
+  const { cities, loading: citiesLoading, error: citiesError } = useIBGECities(form.state);
+
   useEffect(() => {
     if (!user) return;
-    // Check profile first, then fallback to user metadata
     supabase.from("profiles").select("account_type").eq("user_id", user.id).single()
       .then(async ({ data }) => {
         const profileType = data?.account_type || "guest";
         const metaType = user.user_metadata?.account_type || "guest";
-        
-        // If metadata says owner but profile says guest, fix the profile
         if (metaType === "owner" && profileType !== "owner") {
           await supabase.from("profiles").update({ account_type: "owner" } as any).eq("user_id", user.id);
           setAccountType("owner");
@@ -70,6 +78,12 @@ const Advertise = () => {
     setForm({ ...form, price: final });
   };
 
+  const toggleAmenity = (amenity: string) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error(t("advertise.loginRequired")); navigate("/login"); return; }
@@ -100,7 +114,7 @@ const Advertise = () => {
       type: form.type,
       price: Number(form.price),
       guests: Number(form.guests),
-      description: form.description || "",
+      description: [form.description, selectedAmenities.length > 0 ? `\n\nComodidades: ${selectedAmenities.join(", ")}` : ""].join(""),
       image_url: uploadedUrls[0] || "",
       images: uploadedUrls,
     } as any);
@@ -117,6 +131,7 @@ const Advertise = () => {
       setForm({ title: "", city: "", state: "", type: "Hotel", price: "", guests: "2", description: "" });
       setImageFiles([]);
       setImagePreviews([]);
+      setSelectedAmenities([]);
       navigate("/meus-quartos");
     }
   };
@@ -171,14 +186,42 @@ const Advertise = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.city")} *</label>
-                <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <label className="mb-1 block text-sm font-medium text-foreground">Estado *</label>
+                {statesError ? (
+                  <p className="text-xs text-destructive">{statesError}</p>
+                ) : (
+                  <select
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
+                    disabled={statesLoading}
+                    className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">{statesLoading ? "Carregando..." : "Selecione o estado"}</option>
+                    {states.map((s) => (
+                      <option key={s.sigla} value={s.sigla}>{s.nome}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">{t("advertise.state")}</label>
-                <input type="text" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <label className="mb-1 block text-sm font-medium text-foreground">Cidade *</label>
+                {citiesError ? (
+                  <p className="text-xs text-destructive">{citiesError}</p>
+                ) : (
+                  <select
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    disabled={!form.state || citiesLoading}
+                    className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">
+                      {!form.state ? "Selecione o estado primeiro" : citiesLoading ? "Carregando..." : "Selecione a cidade"}
+                    </option>
+                    {cities.map((c) => (
+                      <option key={c.id} value={c.nome}>{c.nome}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -201,6 +244,27 @@ const Advertise = () => {
                   className="styled-select w-full appearance-none rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
                   {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
+              </div>
+            </div>
+
+            {/* Amenities selector */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-foreground">Comodidades</label>
+              <div className="flex flex-wrap gap-2">
+                {ALL_AMENITIES.map((amenity) => (
+                  <button
+                    key={amenity}
+                    type="button"
+                    onClick={() => toggleAmenity(amenity)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                      selectedAmenities.includes(amenity)
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-input text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {amenity}
+                  </button>
+                ))}
               </div>
             </div>
 

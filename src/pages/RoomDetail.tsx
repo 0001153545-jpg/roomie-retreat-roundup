@@ -1,7 +1,8 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { rooms, reviews as mockReviews } from "@/data/mockData";
-import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays } from "lucide-react";
+import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
+import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -169,8 +170,10 @@ const RoomDetail = () => {
   const fee = Math.round(subtotal * 0.1);
   const total = subtotal + fee;
 
+  const isAdmin = isAdminEmail(user?.email);
   const hasReviewed = user && dbReviews.some((r) => r.user_id === user.id);
   const hasCompletedStay = user && userReservations.some((r) => r.status === "completed" || (r.status === "confirmed" && new Date(r.check_out) < new Date()));
+  const canComment = isAdmin || (hasCompletedStay && !hasReviewed);
 
   const handleReserve = async () => {
     if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
@@ -213,8 +216,8 @@ const RoomDetail = () => {
   const handleComment = async () => {
     if (!comment.trim()) return;
     if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
-    if (hasReviewed) { toast.error(t("room.alreadyReviewed")); return; }
-    if (!hasCompletedStay) { toast.error(t("room.mustStayFirst")); return; }
+    if (!isAdmin && hasReviewed) { toast.error(t("room.alreadyReviewed")); return; }
+    if (!isAdmin && !hasCompletedStay) { toast.error(t("room.mustStayFirst")); return; }
 
     const { data, error } = await supabase.from("reviews").insert({
       user_id: user.id, room_id: room.id, rating: userRating,
@@ -231,9 +234,16 @@ const RoomDetail = () => {
     }
   };
 
+  const handleDeleteReview = async (reviewId: string) => {
+    const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
+    if (error) { toast.error("Erro ao excluir avaliação"); return; }
+    setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+    toast.success("Avaliação excluída");
+  };
+
   const allReviews = [
-    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10) })),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date })),
+    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true })),
+    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
   ];
 
   return (
@@ -289,7 +299,7 @@ const RoomDetail = () => {
           <Separator className="mb-6" />
           <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">{t("room.reviewsTitle")} ({allReviews.length})</h2>
 
-          {!hasReviewed && hasCompletedStay && (
+          {canComment && (
             <div className="mb-6 rounded-xl border border-border bg-card p-4">
               <label className="mb-2 block text-sm font-medium text-foreground">{t("room.leaveReview")}</label>
               <div className="mb-3 flex items-center gap-1">
@@ -304,27 +314,37 @@ const RoomDetail = () => {
               <Button onClick={handleComment} disabled={!comment.trim()}>{t("room.submitReview")}</Button>
             </div>
           )}
-          {hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>}
-          {user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
+          {!isAdmin && hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>}
+          {!isAdmin && user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
-            {allReviews.map((review) => (
-              <div key={review.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{review.userName}</p>
-                    <p className="text-xs text-muted-foreground">{review.date}</p>
+            {allReviews.map((review) => {
+              const canDelete = review.isDb && (isAdmin || (user && review.userId === user.id));
+              return (
+                <div key={review.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{review.userName}</p>
+                      <p className="text-xs text-muted-foreground">{review.date}</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
+                        ))}
+                      </div>
+                      {canDelete && (
+                        <button onClick={() => handleDeleteReview(review.id)} className="ml-2 text-destructive hover:text-destructive/80 transition-colors" title="Excluir avaliação">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-auto flex items-center gap-0.5">
-                    {Array.from({ length: review.rating }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-accent text-accent" />
-                    ))}
-                  </div>
+                  <p className="text-sm text-muted-foreground">{review.comment}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{review.comment}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
