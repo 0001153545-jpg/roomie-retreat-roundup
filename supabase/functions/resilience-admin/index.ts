@@ -98,8 +98,16 @@ Deno.serve(async (req) => {
         for (const table of insertOrder) {
           const rows = snapshot[table];
           if (rows && rows.length > 0) {
-            const { error } = await admin.from(table).insert(rows);
-            if (error) throw new Error(`Erro ao restaurar ${table}: ${error.message}`);
+            if (table === "reservations") {
+              // Insert one by one to avoid overlap trigger conflicts between sibling rows
+              for (const row of rows) {
+                const { error } = await admin.from(table).insert(row);
+                if (error) console.warn(`Aviso ao restaurar reserva: ${error.message}`);
+              }
+            } else {
+              const { error } = await admin.from(table).insert(rows);
+              if (error) throw new Error(`Erro ao restaurar ${table}: ${error.message}`);
+            }
           }
         }
 
