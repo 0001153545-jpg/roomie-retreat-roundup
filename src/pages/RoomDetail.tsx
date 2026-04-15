@@ -170,8 +170,10 @@ const RoomDetail = () => {
   const fee = Math.round(subtotal * 0.1);
   const total = subtotal + fee;
 
+  const isAdmin = isAdminEmail(user?.email);
   const hasReviewed = user && dbReviews.some((r) => r.user_id === user.id);
   const hasCompletedStay = user && userReservations.some((r) => r.status === "completed" || (r.status === "confirmed" && new Date(r.check_out) < new Date()));
+  const canComment = isAdmin || (hasCompletedStay && !hasReviewed);
 
   const handleReserve = async () => {
     if (!user) { toast.error(t("common.loginToFavorite")); navigate("/login"); return; }
