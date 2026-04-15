@@ -176,6 +176,33 @@ export type Database = {
         }
         Relationships: []
       }
+      resilience_backups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string
+          snapshot_data: Json
+          tables_included: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label: string
+          snapshot_data: Json
+          tables_included?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string
+          snapshot_data?: Json
+          tables_included?: string[]
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string
