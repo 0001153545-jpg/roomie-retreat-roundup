@@ -55,6 +55,7 @@ const App = () => (
                   <Route path="/admin/usuarios" element={<AdminWrapper><AdminUsers /></AdminWrapper>} />
                   <Route path="/admin/quartos" element={<AdminWrapper><AdminRooms /></AdminWrapper>} />
                   <Route path="/admin/financeiro" element={<AdminWrapper><AdminFinancial /></AdminWrapper>} />
+                  <Route path="/admin/resiliencia" element={<AdminWrapper><AdminResilience /></AdminWrapper>} />
 
                   {/* Public routes */}
                   <Route path="*" element={
