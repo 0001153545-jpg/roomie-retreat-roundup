@@ -292,7 +292,7 @@ const RoomDetail = () => {
           <Separator className="mb-6" />
           <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">{t("room.reviewsTitle")} ({allReviews.length})</h2>
 
-          {!hasReviewed && hasCompletedStay && (
+          {canComment && (
             <div className="mb-6 rounded-xl border border-border bg-card p-4">
               <label className="mb-2 block text-sm font-medium text-foreground">{t("room.leaveReview")}</label>
               <div className="mb-3 flex items-center gap-1">
@@ -307,8 +307,8 @@ const RoomDetail = () => {
               <Button onClick={handleComment} disabled={!comment.trim()}>{t("room.submitReview")}</Button>
             </div>
           )}
-          {hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>}
-          {user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
+          {!isAdmin && hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.alreadyReviewed")}</p>}
+          {!isAdmin && user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
             {allReviews.map((review) => (
