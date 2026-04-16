@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Receipt, BarChart3, CalendarIcon } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, BarChart3, CalendarIcon, XCircle } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -94,6 +94,8 @@ const AdminFinancial = () => {
   // Metrics
   const totalRevenue = useMemo(() => filtered.reduce((s, r) => s + Number(r.total), 0), [filtered]);
   const totalProfit = useMemo(() => filtered.reduce((s, r) => s + Number(r.fee), 0), [filtered]);
+  const cancelledCount = useMemo(() => filtered.filter(r => r.status === "cancelled").length, [filtered]);
+  const cancelledRevenue = useMemo(() => filtered.filter(r => r.status === "cancelled").reduce((s, r) => s + Number(r.total), 0), [filtered]);
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const monthlyRevenue = useMemo(() =>
