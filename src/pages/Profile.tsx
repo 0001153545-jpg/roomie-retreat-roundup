@@ -186,7 +186,11 @@ const Profile = () => {
             {fullName && /^\d+$/.test(fullName.trim()) && <p className="text-xs text-destructive mt-1">Nome não pode conter apenas números</p>}
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone atual</label>
+            <Input value={formatPhone(phone) || "Nenhum telefone cadastrado"} disabled className="bg-muted" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Trocar número de telefone</label>
             <Input value={formatPhone(phone)} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
               placeholder="(11) 99999-9999" maxLength={15} />
             {phone && phone.replace(/\D/g, "").length > 0 && phone.replace(/\D/g, "").length < 11 && (
