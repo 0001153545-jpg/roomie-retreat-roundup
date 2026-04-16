@@ -298,9 +298,12 @@ const RoomDetail = () => {
           </div>
 
           <div className="flex items-center gap-3 mb-6">
-            <Avatar className="h-10 w-10"><AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{room.hostAvatar}</AvatarFallback></Avatar>
+            <Avatar className="h-10 w-10">
+              {hostProfile?.avatar_url && <AvatarImage src={hostProfile.avatar_url} alt={hostProfile.full_name || room.host} />}
+              <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{room.hostAvatar}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground">{room.host}</p>
+              <p className="text-sm font-medium text-foreground">{hostProfile?.full_name || room.host}</p>
               <p className="text-xs text-muted-foreground">{t("room.verifiedHost")}</p>
             </div>
           </div>
