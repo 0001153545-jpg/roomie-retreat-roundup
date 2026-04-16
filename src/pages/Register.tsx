@@ -9,7 +9,7 @@ import { useIBGEStates, useIBGECities } from "@/hooks/useIBGE";
 import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
-  const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest", state: "", city: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest", state: "", city: "", phone: "", cpf: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,6 +45,10 @@ const Register = () => {
     const phoneDigits = form.phone.replace(/\D/g, "");
     if (form.phone && phoneDigits.length !== 11) e.phone = "Telefone deve ter 11 dígitos";
 
+    const cpfDigits = form.cpf.replace(/\D/g, "");
+    if (!cpfDigits) e.cpf = "CPF obrigatório";
+    else if (cpfDigits.length !== 11) e.cpf = "CPF deve ter 11 dígitos";
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -58,7 +62,12 @@ const Register = () => {
       email: form.email,
       password: form.password,
       options: {
-        data: { full_name: form.name, account_type: form.type },
+        data: {
+          full_name: form.name,
+          account_type: form.type,
+          cpf: form.cpf.replace(/\D/g, ""),
+          phone: form.phone.replace(/\D/g, ""),
+        },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -106,6 +115,14 @@ const Register = () => {
               </button>
             </div>
             {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">CPF *</label>
+            <input type="text" required inputMode="numeric" value={form.cpf}
+              onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "").slice(0, 11) })}
+              placeholder="00000000000" maxLength={11}
+              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            {errors.cpf && <p className="text-xs text-destructive mt-1">{errors.cpf}</p>}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone</label>
