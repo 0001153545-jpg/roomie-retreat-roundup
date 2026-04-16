@@ -64,6 +64,8 @@ const RoomDetail = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
+  const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
+  const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [reserving, setReserving] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvv: "" });
@@ -98,9 +100,12 @@ const RoomDetail = () => {
   // Load DB listing if not a mock room
   useEffect(() => {
     if (mockRoom || !id) return;
-    supabase.from("listings").select("*").eq("id", id).single().then(({ data }) => {
+    supabase.from("listings").select("*").eq("id", id).single().then(async ({ data }) => {
       if (data) {
         const l = data as any;
+        // Load host profile
+        const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
+        if (hostData) setHostProfile(hostData);
         setDbRoom({
           id: l.id,
           title: l.title,
@@ -116,8 +121,8 @@ const RoomDetail = () => {
           images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
           amenities: ["Wi-Fi"],
           type: l.type,
-          host: l.title,
-          hostAvatar: l.title.slice(0, 2).toUpperCase(),
+          host: hostData?.full_name || l.title,
+          hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
         });
       }
     });
@@ -126,7 +131,20 @@ const RoomDetail = () => {
   useEffect(() => {
     if (!id) return;
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setDbReviews(data as DbReview[]); });
+      .then(async ({ data }) => {
+        if (data) {
+          setDbReviews(data as DbReview[]);
+          const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
+          if (userIds.length > 0) {
+            const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
+            if (profs) {
+              const map: Record<string, any> = {};
+              profs.forEach((p: any) => { map[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
+              setReviewerProfiles(map);
+            }
+          }
+        }
+      });
   }, [id]);
 
   useEffect(() => {
