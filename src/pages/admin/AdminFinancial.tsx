@@ -211,6 +211,18 @@ const AdminFinancial = () => {
           </CardHeader>
           <CardContent><p className="text-2xl font-bold text-amber-600">R$ {avgTicket.toFixed(2)}</p></CardContent>
         </Card>
+        {cancelledCount > 0 && (
+          <Card className="shadow-sm border-l-4 border-l-red-500">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Cancelamentos</CardTitle>
+              <div className="p-2 rounded-lg text-red-600 bg-red-100"><XCircle className="h-4 w-4" /></div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-red-600">{cancelledCount}</p>
+              <p className="text-xs text-muted-foreground mt-1">R$ {cancelledRevenue.toFixed(2)} perdidos</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Charts */}
