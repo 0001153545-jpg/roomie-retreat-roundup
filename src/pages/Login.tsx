@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Separator } from "@/components/ui/separator";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -85,8 +87,14 @@ const Login = () => {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("login.password")}</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <button type="button" onClick={() => setShowReset(true)} className="text-xs text-primary hover:underline">{t("login.forgotPassword")}</button>
             <Button type="submit" className="w-full" disabled={loading}>

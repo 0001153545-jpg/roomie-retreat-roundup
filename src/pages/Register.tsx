@@ -6,10 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGE";
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest", state: "", city: "", phone: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -18,29 +21,52 @@ const Register = () => {
 
   if (user) { navigate("/"); return null; }
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    const name = form.name.trim();
+    if (name.length < 3) e.name = "Mínimo de 3 caracteres";
+    else if (name.length > 100) e.name = "Máximo de 100 caracteres";
+    else if (/^\d+$/.test(name)) e.name = "Nome não pode conter apenas números";
+
+    if (!form.email) e.email = "E-mail obrigatório";
+    else if (form.email.length > 150) e.email = "Máximo de 150 caracteres";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Formato de e-mail inválido";
+
+    if (form.password.length < 6) e.password = "Mínimo de 6 caracteres";
+    else if (form.password.length > 50) e.password = "Máximo de 50 caracteres";
+
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (form.phone && phoneDigits.length !== 11) e.phone = "Telefone deve ter 11 dígitos";
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
 
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        data: {
-          full_name: form.name,
-          account_type: form.type,
-        },
+        data: { full_name: form.name, account_type: form.type },
         emailRedirectTo: window.location.origin,
       },
     });
     setLoading(false);
 
     if (error) {
-      if (error.message.includes("already registered")) {
-        toast.error(t("register.alreadyRegistered"));
-      } else {
-        toast.error(error.message);
-      }
+      if (error.message.includes("already registered")) toast.error(t("register.alreadyRegistered"));
+      else toast.error(error.message);
     } else {
       toast.success(t("register.success"));
       navigate("/login");
@@ -57,23 +83,37 @@ const Register = () => {
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("register.name")}</label>
             <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              maxLength={100} minLength={3}
               className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("login.email")}</label>
             <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              maxLength={150}
               className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            {errors.email && <p className="text-xs text-destructive mt-1">{errors.email}</p>}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("login.password")}</label>
-            <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <div className="relative">
+              <input type={showPassword ? "text" : "password"} required minLength={6} maxLength={50}
+                value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full rounded-lg border border-input bg-background p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {errors.password && <p className="text-xs text-destructive mt-1">{errors.password}</p>}
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone</label>
-            <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="(11) 99999-9999"
+            <input type="tel" value={formatPhone(form.phone)}
+              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 11) })}
+              placeholder="(11) 99999-9999" maxLength={15}
               className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -82,16 +122,11 @@ const Register = () => {
               {statesError ? (
                 <p className="text-xs text-destructive">{statesError}</p>
               ) : (
-                <select
-                  value={form.state}
-                  onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
+                <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
                   disabled={statesLoading}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-                >
+                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
                   <option value="">{statesLoading ? "Carregando..." : "Selecione"}</option>
-                  {states.map((s) => (
-                    <option key={s.sigla} value={s.sigla}>{s.nome}</option>
-                  ))}
+                  {states.map((s) => <option key={s.sigla} value={s.sigla}>{s.nome}</option>)}
                 </select>
               )}
             </div>
@@ -100,18 +135,11 @@ const Register = () => {
               {citiesError ? (
                 <p className="text-xs text-destructive">{citiesError}</p>
               ) : (
-                <select
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
                   disabled={!form.state || citiesLoading}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">
-                    {!form.state ? "Selecione o estado" : citiesLoading ? "Carregando..." : "Selecione"}
-                  </option>
-                  {cities.map((c) => (
-                    <option key={c.id} value={c.nome}>{c.nome}</option>
-                  ))}
+                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">{!form.state ? "Selecione o estado" : citiesLoading ? "Carregando..." : "Selecione"}</option>
+                  {cities.map((c) => <option key={c.id} value={c.nome}>{c.nome}</option>)}
                 </select>
               )}
             </div>
