@@ -260,8 +260,11 @@ const RoomDetail = () => {
   };
 
   const allReviews = [
-    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true })),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
+    ...dbReviews.map((r) => {
+      const prof = reviewerProfiles[r.user_id];
+      return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
+    }),
+    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, avatarUrl: null, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
   ];
 
   return (
