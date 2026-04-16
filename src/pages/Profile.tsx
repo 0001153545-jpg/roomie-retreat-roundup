@@ -19,6 +19,7 @@ const Profile = () => {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -36,6 +37,7 @@ const Profile = () => {
         if (data) {
           setFullName(data.full_name || "");
           setPhone(data.phone || "");
+          setCpf((data as any).cpf || "");
           setAvatarUrl(data.avatar_url);
         }
         setLoading(false);
@@ -178,6 +180,11 @@ const Profile = () => {
             <label className="mb-1 block text-xs font-medium text-muted-foreground">E-mail</label>
             <Input value={user?.email || ""} disabled className="bg-muted" />
             <p className="text-xs text-muted-foreground mt-1">O e-mail não pode ser alterado</p>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">CPF</label>
+            <Input value={cpf ? `•••••••••${cpf.slice(-2)}` : "CPF não cadastrado"} disabled className="bg-muted" />
+            <p className="text-xs text-muted-foreground mt-1">Por segurança, exibimos apenas os últimos 2 dígitos</p>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome completo</label>

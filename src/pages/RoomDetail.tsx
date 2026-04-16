@@ -5,7 +5,7 @@ import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffe
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -64,6 +64,8 @@ const RoomDetail = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
+  const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
+  const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [reserving, setReserving] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
   const [cardForm, setCardForm] = useState({ number: "", name: "", expiry: "", cvv: "" });
@@ -98,9 +100,12 @@ const RoomDetail = () => {
   // Load DB listing if not a mock room
   useEffect(() => {
     if (mockRoom || !id) return;
-    supabase.from("listings").select("*").eq("id", id).single().then(({ data }) => {
+    supabase.from("listings").select("*").eq("id", id).single().then(async ({ data }) => {
       if (data) {
         const l = data as any;
+        // Load host profile
+        const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
+        if (hostData) setHostProfile(hostData);
         setDbRoom({
           id: l.id,
           title: l.title,
@@ -116,8 +121,8 @@ const RoomDetail = () => {
           images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
           amenities: ["Wi-Fi"],
           type: l.type,
-          host: l.title,
-          hostAvatar: l.title.slice(0, 2).toUpperCase(),
+          host: hostData?.full_name || l.title,
+          hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
         });
       }
     });
@@ -126,7 +131,20 @@ const RoomDetail = () => {
   useEffect(() => {
     if (!id) return;
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setDbReviews(data as DbReview[]); });
+      .then(async ({ data }) => {
+        if (data) {
+          setDbReviews(data as DbReview[]);
+          const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
+          if (userIds.length > 0) {
+            const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
+            if (profs) {
+              const map: Record<string, any> = {};
+              profs.forEach((p: any) => { map[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
+              setReviewerProfiles(map);
+            }
+          }
+        }
+      });
   }, [id]);
 
   useEffect(() => {
@@ -242,8 +260,11 @@ const RoomDetail = () => {
   };
 
   const allReviews = [
-    ...dbReviews.map((r) => ({ id: r.id, userName: r.user_name, userAvatar: r.user_name.split(" ").map(w => w[0]).join("").slice(0, 2), rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true })),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
+    ...dbReviews.map((r) => {
+      const prof = reviewerProfiles[r.user_id];
+      return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
+    }),
+    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, avatarUrl: null, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
   ];
 
   return (
@@ -277,9 +298,12 @@ const RoomDetail = () => {
           </div>
 
           <div className="flex items-center gap-3 mb-6">
-            <Avatar className="h-10 w-10"><AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{room.hostAvatar}</AvatarFallback></Avatar>
+            <Avatar className="h-10 w-10">
+              {hostProfile?.avatar_url && <AvatarImage src={hostProfile.avatar_url} alt={hostProfile.full_name || room.host} />}
+              <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{room.hostAvatar}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground">{room.host}</p>
+              <p className="text-sm font-medium text-foreground">{hostProfile?.full_name || room.host}</p>
               <p className="text-xs text-muted-foreground">{t("room.verifiedHost")}</p>
             </div>
           </div>
@@ -323,7 +347,10 @@ const RoomDetail = () => {
               return (
                 <div key={review.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
+                    <Avatar className="h-8 w-8">
+                      {review.avatarUrl && <AvatarImage src={review.avatarUrl} alt={review.userName} />}
+                      <AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="text-sm font-medium text-foreground">{review.userName}</p>
                       <p className="text-xs text-muted-foreground">{review.date}</p>
