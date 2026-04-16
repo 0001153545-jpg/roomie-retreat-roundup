@@ -5,7 +5,7 @@ import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffe
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -347,7 +347,10 @@ const RoomDetail = () => {
               return (
                 <div key={review.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <Avatar className="h-8 w-8"><AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback></Avatar>
+                    <Avatar className="h-8 w-8">
+                      {review.avatarUrl && <AvatarImage src={review.avatarUrl} alt={review.userName} />}
+                      <AvatarFallback className="bg-primary/10 text-xs text-primary font-medium">{review.userAvatar}</AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="text-sm font-medium text-foreground">{review.userName}</p>
                       <p className="text-xs text-muted-foreground">{review.date}</p>
