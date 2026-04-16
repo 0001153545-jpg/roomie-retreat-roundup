@@ -112,6 +112,9 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate("/perfil")}>
+                  <User className="mr-2 h-4 w-4" /> Meu Perfil
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/favoritos")}>
                   <Heart className="mr-2 h-4 w-4" /> {t("nav.favorites")}
                 </DropdownMenuItem>
@@ -158,6 +161,7 @@ const Header = () => {
             ))}
             {user && (
               <>
+                <Link to="/perfil" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">Meu Perfil</Link>
                 <Link to="/favoritos" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.favorites")}</Link>
                 <Link to="/minhas-reservas" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">{t("nav.myReservations")}</Link>
                 {accountType === "owner" && (
