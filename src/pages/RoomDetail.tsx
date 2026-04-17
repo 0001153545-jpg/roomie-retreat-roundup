@@ -101,23 +101,23 @@ const RoomDetail = () => {
     return bookedDates.some(r => r.start >= checkInDate && r.start < date);
   };
 
-  // Load DB listing if not a mock room
+  // Load room from DB
   useEffect(() => {
-    if (mockRoom || !id) return;
-    supabase.from("listings").select("*").eq("id", id).single().then(async ({ data }) => {
+    if (!id) return;
+    setRoomLoading(true);
+    supabase.from("listings").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         const l = data as any;
-        // Load host profile
         const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
         if (hostData) setHostProfile(hostData);
-        setDbRoom({
+        setRoom({
           id: l.id,
           title: l.title,
           description: l.description || "",
           city: l.city,
           state: l.state,
-          price: l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price,
-          originalPrice: l.discount_percent > 0 ? l.price : undefined,
+          price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
+          originalPrice: l.discount_percent > 0 ? Number(l.price) : undefined,
           rating: 4.5,
           reviewCount: 0,
           guests: l.guests,
@@ -129,8 +129,9 @@ const RoomDetail = () => {
           hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
         });
       }
+      setRoomLoading(false);
     });
-  }, [id, mockRoom]);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -263,13 +264,10 @@ const RoomDetail = () => {
     toast.success("Avaliação excluída");
   };
 
-  const allReviews = [
-    ...dbReviews.map((r) => {
-      const prof = reviewerProfiles[r.user_id];
-      return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
-    }),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, avatarUrl: null, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
-  ];
+  const allReviews = dbReviews.map((r) => {
+    const prof = reviewerProfiles[r.user_id];
+    return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
+  });
 
   return (
     <div className="container-page py-6">
