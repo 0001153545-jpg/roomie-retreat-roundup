@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, Users, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { rooms } from "@/data/mockData";
 
 interface Reservation {
   id: string; room_id: string; room_title: string; check_in: string; check_out: string;
   guests: number; subtotal: number; fee: number; total: number; status: string; created_at: string;
 }
+
+interface RoomInfo { id: string; image_url: string | null; city: string; state: string; }
 
 const MyReservations = () => {
   const { user, loading } = useAuth();
