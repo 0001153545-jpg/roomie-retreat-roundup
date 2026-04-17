@@ -440,7 +440,7 @@ const RoomDetail = () => {
                       mode="single"
                       selected={checkOutDate}
                       onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
-                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate || isDateBooked(date)}
+                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate || isDateBooked(date) || isCheckOutInvalid(date)}
                       locale={dateLocale}
                       initialFocus
                       className="p-3 pointer-events-auto"
