@@ -108,7 +108,8 @@ const RoomDetail = () => {
     supabase.from("listings").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         const l = data as any;
-        const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
+        const { data: hostRows } = await supabase.rpc("get_public_profile", { target_user_id: l.user_id });
+        const hostData = hostRows && hostRows.length > 0 ? hostRows[0] : null;
         if (hostData) setHostProfile(hostData);
         setRoom({
           id: l.id,
