@@ -238,38 +238,30 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          account_type: string | null
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          account_type?: string | null
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          account_type?: string | null
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cascade_delete_user_data: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      get_public_profile: {
+        Args: { target_user_id: string }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: { target_user_ids: string[] }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
       }
       is_admin: { Args: never; Returns: boolean }
     }
