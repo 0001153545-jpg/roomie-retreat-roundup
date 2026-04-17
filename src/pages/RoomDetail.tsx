@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { rooms, reviews as mockReviews } from "@/data/mockData";
+import type { Room } from "@/data/mockData";
 import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
