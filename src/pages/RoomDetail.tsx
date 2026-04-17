@@ -142,7 +142,7 @@ const RoomDetail = () => {
           setDbReviews(data as DbReview[]);
           const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
           if (userIds.length > 0) {
-            const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
+            const { data: profs } = await supabase.rpc("get_public_profiles", { target_user_ids: userIds });
             if (profs) {
               const map: Record<string, any> = {};
               profs.forEach((p: any) => { map[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
