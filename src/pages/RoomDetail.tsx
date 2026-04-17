@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { rooms, reviews as mockReviews } from "@/data/mockData";
+import type { Room } from "@/data/mockData";
 import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
@@ -51,10 +51,8 @@ const RoomDetail = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t, language } = useLanguage();
   const { formatPrice, currency } = useCurrency();
-  const mockRoom = rooms.find((r) => r.id === id);
-  const roomMockReviews = mockReviews.filter((r) => r.roomId === id);
-  const [dbRoom, setDbRoom] = useState<typeof rooms[0] | null>(null);
-  const room = mockRoom || dbRoom;
+  const [room, setRoom] = useState<Room | null>(null);
+  const [roomLoading, setRoomLoading] = useState(true);
 
   const [checkInDate, setCheckInDate] = useState<Date | undefined>();
   const [checkOutDate, setCheckOutDate] = useState<Date | undefined>();
@@ -103,23 +101,23 @@ const RoomDetail = () => {
     return bookedDates.some(r => r.start >= checkInDate && r.start < date);
   };
 
-  // Load DB listing if not a mock room
+  // Load room from DB
   useEffect(() => {
-    if (mockRoom || !id) return;
-    supabase.from("listings").select("*").eq("id", id).single().then(async ({ data }) => {
+    if (!id) return;
+    setRoomLoading(true);
+    supabase.from("listings").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         const l = data as any;
-        // Load host profile
         const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
         if (hostData) setHostProfile(hostData);
-        setDbRoom({
+        setRoom({
           id: l.id,
           title: l.title,
           description: l.description || "",
           city: l.city,
           state: l.state,
-          price: l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price,
-          originalPrice: l.discount_percent > 0 ? l.price : undefined,
+          price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
+          originalPrice: l.discount_percent > 0 ? Number(l.price) : undefined,
           rating: 4.5,
           reviewCount: 0,
           guests: l.guests,
@@ -131,8 +129,9 @@ const RoomDetail = () => {
           hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
         });
       }
+      setRoomLoading(false);
     });
-  }, [id, mockRoom]);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -177,6 +176,10 @@ const RoomDetail = () => {
         }
       });
   }, [id]);
+
+  if (roomLoading) {
+    return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
+  }
 
   if (!room) {
     return (
@@ -265,13 +268,10 @@ const RoomDetail = () => {
     toast.success("Avaliação excluída");
   };
 
-  const allReviews = [
-    ...dbReviews.map((r) => {
-      const prof = reviewerProfiles[r.user_id];
-      return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
-    }),
-    ...roomMockReviews.map((r) => ({ id: r.id, userName: r.userName, userAvatar: r.userAvatar, avatarUrl: null, rating: r.rating, comment: r.comment, date: r.date, userId: "", isDb: false })),
-  ];
+  const allReviews = dbReviews.map((r) => {
+    const prof = reviewerProfiles[r.user_id];
+    return { id: r.id, userName: prof?.full_name || r.user_name, userAvatar: (prof?.full_name || r.user_name).split(" ").map(w => w[0]).join("").slice(0, 2), avatarUrl: prof?.avatar_url || null, rating: r.rating, comment: r.comment, date: r.created_at.slice(0, 10), userId: r.user_id, isDb: true };
+  });
 
   return (
     <div className="container-page py-6">

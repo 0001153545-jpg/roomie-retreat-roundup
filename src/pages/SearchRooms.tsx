@@ -1,15 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { rooms as mockRooms } from "@/data/mockData";
 import type { Room } from "@/data/mockData";
 import RoomCard from "@/components/RoomCard";
 import { Search, SlidersHorizontal, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
+import { mapListingToRoom } from "@/lib/listings";
 
 const amenityFilters = ["Wi-Fi", "Ar condicionado", "Piscina", "Café da manhã", "Estacionamento", "Aceita animais"];
 
@@ -28,43 +29,19 @@ const SearchRooms = () => {
   const [sortBy, setSortBy] = useState("rating");
   const [showFilters, setShowFilters] = useState(false);
   const { favoriteIds, toggleFavorite } = useFavorites();
-  const [dbListings, setDbListings] = useState<Room[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.from("listings").select("*").then(({ data }) => {
-      if (data) {
-        const converted: Room[] = data.map((l: any) => ({
-          id: l.id,
-          title: l.title,
-          description: l.description || "",
-          city: l.city,
-          state: l.state,
-          price: l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price,
-          originalPrice: l.discount_percent > 0 ? l.price : undefined,
-          rating: 4.5,
-          reviewCount: 0,
-          guests: l.guests,
-          image: l.image_url || "/placeholder.svg",
-          images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
-          amenities: ["Wi-Fi"],
-          type: l.type,
-          host: l.title,
-          hostAvatar: l.title.slice(0, 2).toUpperCase(),
-        }));
-        setDbListings(converted);
-      }
+      if (data) setAllRooms(data.map(mapListingToRoom));
+      setLoading(false);
     });
   }, []);
 
   const toggleAmenity = (a: string) => {
     setSelectedAmenities((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
   };
-
-  const allRooms = useMemo(() => {
-    // Merge mock rooms with DB listings, DB listings take priority by not duplicating ids
-    const mockIds = new Set(mockRooms.map(r => r.id));
-    return [...mockRooms, ...dbListings.filter(l => !mockIds.has(l.id))];
-  }, [dbListings]);
 
   const filtered = useMemo(() => {
     const guestsFilter = guestsParam ? Number(guestsParam) : 0;
@@ -143,7 +120,11 @@ const SearchRooms = () => {
         </div>
       )}
 
-      {filtered.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 w-full rounded-xl" />)}
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((room) => (
             <RoomCard key={room.id} room={room} isFavorite={favoriteIds.has(room.id)} onToggleFavorite={toggleFavorite} />

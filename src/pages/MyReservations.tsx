@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, Users, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { rooms } from "@/data/mockData";
 
 interface Reservation {
   id: string; room_id: string; room_title: string; check_in: string; check_out: string;
   guests: number; subtotal: number; fee: number; total: number; status: string; created_at: string;
 }
+
+interface RoomInfo { id: string; image_url: string | null; city: string; state: string; }
 
 const MyReservations = () => {
   const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ const MyReservations = () => {
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [roomInfo, setRoomInfo] = useState<Record<string, RoomInfo>>({});
   const [fetching, setFetching] = useState(true);
 
   const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
@@ -34,9 +36,20 @@ const MyReservations = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("reservations").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) toast.error("Erro ao carregar reservas");
-        else setReservations(data || []);
+        else {
+          setReservations(data || []);
+          const ids = [...new Set((data || []).map((r: any) => r.room_id))];
+          if (ids.length > 0) {
+            const { data: rs } = await supabase.from("listings").select("id, image_url, city, state").in("id", ids);
+            if (rs) {
+              const map: Record<string, RoomInfo> = {};
+              rs.forEach((r: any) => { map[r.id] = r; });
+              setRoomInfo(map);
+            }
+          }
+        }
         setFetching(false);
       });
   }, [user]);
@@ -66,12 +79,12 @@ const MyReservations = () => {
       ) : (
         <div className="space-y-4">
           {reservations.map((res) => {
-            const room = rooms.find((r) => r.id === res.room_id);
+            const room = roomInfo[res.room_id];
             const nights = Math.max(1, Math.ceil((new Date(res.check_out).getTime() - new Date(res.check_in).getTime()) / (1000 * 60 * 60 * 24)));
             const status = statusMap[res.status] || statusMap.confirmed;
             return (
               <div key={res.id} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center">
-                {room && <img src={room.image} alt={res.room_title} className="h-24 w-full rounded-lg object-cover sm:w-36" />}
+                {room?.image_url && <img src={room.image_url} alt={res.room_title} className="h-24 w-full rounded-lg object-cover sm:w-36" />}
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-heading text-base font-semibold text-foreground">{res.room_title}</h3>

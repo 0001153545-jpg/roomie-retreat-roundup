@@ -1,28 +1,27 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { rooms, destinations } from "@/data/mockData";
+import { destinations } from "@/data/mockData";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const DestinationsSection = () => {
   const { t } = useLanguage();
-  const [dbCityCounts, setDbCityCounts] = useState<Record<string, number>>({});
+  const [cityCounts, setCityCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     supabase.from("listings").select("city").then(({ data }) => {
       if (data) {
         const counts: Record<string, number> = {};
         data.forEach((l: any) => { counts[l.city] = (counts[l.city] || 0) + 1; });
-        setDbCityCounts(counts);
+        setCityCounts(counts);
       }
     });
   }, []);
 
-  const destinationsWithCount = destinations.map((dest) => {
-    const mockCount = rooms.filter((r) => r.city === dest.name).length;
-    const dbCount = dbCityCounts[dest.name] || 0;
-    return { ...dest, roomCount: mockCount + dbCount };
-  });
+  const destinationsWithCount = destinations.map((dest) => ({
+    ...dest,
+    roomCount: cityCounts[dest.name] || 0,
+  }));
 
   return (
     <section className="bg-muted/50 py-16">
