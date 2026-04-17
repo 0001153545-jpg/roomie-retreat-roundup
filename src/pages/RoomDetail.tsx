@@ -108,7 +108,8 @@ const RoomDetail = () => {
     supabase.from("listings").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       if (data) {
         const l = data as any;
-        const { data: hostData } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", l.user_id).maybeSingle();
+        const { data: hostRows } = await supabase.rpc("get_public_profile", { target_user_id: l.user_id });
+        const hostData = hostRows && hostRows.length > 0 ? hostRows[0] : null;
         if (hostData) setHostProfile(hostData);
         setRoom({
           id: l.id,
@@ -141,7 +142,7 @@ const RoomDetail = () => {
           setDbReviews(data as DbReview[]);
           const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
           if (userIds.length > 0) {
-            const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds);
+            const { data: profs } = await supabase.rpc("get_public_profiles", { target_user_ids: userIds });
             if (profs) {
               const map: Record<string, any> = {};
               profs.forEach((p: any) => { map[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });

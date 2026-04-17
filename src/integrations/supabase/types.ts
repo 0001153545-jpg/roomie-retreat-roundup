@@ -245,6 +245,24 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      get_public_profile: {
+        Args: { target_user_id: string }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
+      }
+      get_public_profiles: {
+        Args: { target_user_ids: string[] }
+        Returns: {
+          account_type: string
+          avatar_url: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
