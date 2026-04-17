@@ -59,10 +59,10 @@ const MyRooms = () => {
     setReservations(prev => ({ ...prev, [listingId]: res }));
     const userIds = [...new Set(res.map(r => r.user_id))];
     if (userIds.length > 0) {
-      const { data: profileData } = await supabase.from("profiles").select("full_name, user_id").in("user_id", userIds);
+      const { data: profileData } = await supabase.rpc("get_public_profiles", { target_user_ids: userIds });
       if (profileData) {
         const map: Record<string, Profile> = { ...profiles };
-        profileData.forEach((p: any) => { map[p.user_id] = p; });
+        profileData.forEach((p: any) => { map[p.user_id] = { user_id: p.user_id, full_name: p.full_name }; });
         setProfiles(map);
       }
     }
