@@ -1,43 +1,32 @@
 import { useState, useEffect } from "react";
-import { destinations, rooms as mockRooms } from "@/data/mockData";
+import { destinations } from "@/data/mockData";
 import type { Room } from "@/data/mockData";
 import RoomCard from "@/components/RoomCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { MapPin, TrendingUp } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { mapListingToRoom } from "@/lib/listings";
 
 const Explore = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
-  const [dbListings, setDbListings] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     supabase.from("listings").select("*").then(({ data }) => {
-      if (data) {
-        const converted: Room[] = data.map((l: any) => ({
-          id: l.id, title: l.title, description: l.description || "",
-          city: l.city, state: l.state,
-          price: l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price,
-          originalPrice: l.discount_percent > 0 ? l.price : undefined,
-          rating: 4.5, reviewCount: 0, guests: l.guests,
-          image: l.image_url || "/placeholder.svg",
-          images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
-          amenities: ["Wi-Fi"], type: l.type, host: l.title,
-          hostAvatar: l.title.slice(0, 2).toUpperCase(),
-        }));
-        setDbListings(converted);
-      }
+      if (data) setRooms(data.map(mapListingToRoom));
+      setLoading(false);
     });
   }, []);
 
-  const allRooms = [...mockRooms, ...dbListings.filter(l => !mockRooms.some(r => r.id === l.id))];
-
-  const destinationsWithCount = destinations.map((dest) => {
-    const count = allRooms.filter((r) => r.city === dest.name).length;
-    return { ...dest, roomCount: count };
-  });
+  const destinationsWithCount = destinations.map((dest) => ({
+    ...dest,
+    roomCount: rooms.filter((r) => r.city === dest.name).length,
+  }));
 
   return (
     <div className="container-page py-8">
@@ -67,11 +56,19 @@ const Explore = () => {
       <h2 className="mb-4 flex items-center gap-2 font-heading text-xl font-semibold text-foreground">
         <TrendingUp className="h-5 w-5 text-primary" /> {t("explore.hot")}
       </h2>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {allRooms.slice(0, 9).map((room) => (
-          <RoomCard key={room.id} room={room} isFavorite={favoriteIds.has(room.id)} onToggleFavorite={toggleFavorite} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-80 w-full rounded-xl" />)}
+        </div>
+      ) : rooms.length === 0 ? (
+        <div className="py-16 text-center text-muted-foreground">Nenhum quarto disponível no momento.</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {rooms.slice(0, 9).map((room) => (
+            <RoomCard key={room.id} room={room} isFavorite={favoriteIds.has(room.id)} onToggleFavorite={toggleFavorite} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
