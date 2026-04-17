@@ -97,6 +97,12 @@ const RoomDetail = () => {
     return bookedDates.some(r => checkIn < r.end && checkOut > r.start);
   };
 
+  // For check-out: disable any date where a booked range starts between checkIn and that date
+  const isCheckOutInvalid = (date: Date) => {
+    if (!checkInDate) return false;
+    return bookedDates.some(r => r.start >= checkInDate && r.start < date);
+  };
+
   // Load DB listing if not a mock room
   useEffect(() => {
     if (mockRoom || !id) return;
@@ -434,7 +440,7 @@ const RoomDetail = () => {
                       mode="single"
                       selected={checkOutDate}
                       onSelect={(d) => { setCheckOutDate(d); setCheckOutOpen(false); }}
-                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate || isDateBooked(date)}
+                      disabled={(date) => isBefore(date, checkInDate ? addDays(checkInDate, 1) : addDays(today, 1)) || date > maxDate || isDateBooked(date) || isCheckOutInvalid(date)}
                       locale={dateLocale}
                       initialFocus
                       className="p-3 pointer-events-auto"
