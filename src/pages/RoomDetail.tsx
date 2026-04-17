@@ -177,6 +177,10 @@ const RoomDetail = () => {
       });
   }, [id]);
 
+  if (roomLoading) {
+    return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
+  }
+
   if (!room) {
     return (
       <div className="container-page py-20 text-center">
