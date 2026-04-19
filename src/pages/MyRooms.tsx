@@ -7,11 +7,17 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
 
+const ALL_AMENITIES = [
+  "Wi-Fi", "Ar condicionado", "Estacionamento", "Café da manhã", "Piscina",
+  "Aceita animais", "Spa", "Academia", "Lavanderia", "Jacuzzi", "Terraço",
+  "Concierge 24h", "Praia privativa",
+];
+
 interface Listing {
-  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number; description: string | null;
+  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number; description: string | null; amenities: string[];
 }
 
 interface Reservation {
@@ -40,6 +46,9 @@ const MyRooms = () => {
   const [updatingPhotos, setUpdatingPhotos] = useState<string | null>(null);
   const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([]);
+  const [editingDetails, setEditingDetails] = useState<string | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editAmenities, setEditAmenities] = useState<string[]>([]);
 
   useEffect(() => { if (!loading && !user) navigate("/login"); }, [user, loading, navigate]);
 
@@ -47,7 +56,7 @@ const MyRooms = () => {
     if (!user) return;
     supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        const items = (data || []).map((d: any) => ({ ...d, images: d.images || [], discount_percent: d.discount_percent || 0 })) as Listing[];
+        const items = (data || []).map((d: any) => ({ ...d, images: d.images || [], discount_percent: d.discount_percent || 0, amenities: d.amenities || [] })) as Listing[];
         setListings(items);
         setFetching(false);
       });
