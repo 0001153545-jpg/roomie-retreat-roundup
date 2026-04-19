@@ -177,6 +177,7 @@ const MyRooms = () => {
   };
 
 
+  const paymentLabel = (method: string) => {
     if (method === "credit") return t("room.creditCard");
     if (method === "debit") return t("room.debitCard");
     if (method === "pix") return "PIX";
