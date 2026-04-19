@@ -304,16 +304,16 @@ const RoomDetail = () => {
             <span className="flex items-center gap-1 text-muted-foreground"><Users className="h-4 w-4" /> {t("room.upToGuests", { n: String(room.guests) })}</span>
           </div>
 
-          <div className="flex items-center gap-3 mb-6">
-            <Avatar className="h-10 w-10">
+          <Link to={`/host/${room.hostId || ""}`} className="flex items-center gap-3 mb-6 group w-fit">
+            <Avatar className="h-10 w-10 transition-transform group-hover:scale-105">
               {hostProfile?.avatar_url && <AvatarImage src={hostProfile.avatar_url} alt={hostProfile.full_name || room.host} />}
               <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">{room.hostAvatar}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium text-foreground">{hostProfile?.full_name || room.host}</p>
+              <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{hostProfile?.full_name || room.host}</p>
               <p className="text-xs text-muted-foreground">{t("room.verifiedHost")}</p>
             </div>
-          </div>
+          </Link>
 
           <Separator className="mb-6" />
           <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">{t("room.description")}</h2>
