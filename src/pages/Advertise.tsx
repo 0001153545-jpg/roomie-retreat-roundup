@@ -114,7 +114,8 @@ const Advertise = () => {
       type: form.type,
       price: Number(form.price),
       guests: Number(form.guests),
-      description: [form.description, selectedAmenities.length > 0 ? `\n\nComodidades: ${selectedAmenities.join(", ")}` : ""].join(""),
+      description: form.description,
+      amenities: selectedAmenities,
       image_url: uploadedUrls[0] || "",
       images: uploadedUrls,
     } as any);

@@ -7,11 +7,17 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
 
+const ALL_AMENITIES = [
+  "Wi-Fi", "Ar condicionado", "Estacionamento", "Café da manhã", "Piscina",
+  "Aceita animais", "Spa", "Academia", "Lavanderia", "Jacuzzi", "Terraço",
+  "Concierge 24h", "Praia privativa",
+];
+
 interface Listing {
-  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number; description: string | null;
+  id: string; title: string; city: string; state: string; type: string; price: number; guests: number; image_url: string; images: string[]; created_at: string; discount_percent: number; description: string | null; amenities: string[];
 }
 
 interface Reservation {
@@ -40,6 +46,9 @@ const MyRooms = () => {
   const [updatingPhotos, setUpdatingPhotos] = useState<string | null>(null);
   const [newPhotoFiles, setNewPhotoFiles] = useState<File[]>([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([]);
+  const [editingDetails, setEditingDetails] = useState<string | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editAmenities, setEditAmenities] = useState<string[]>([]);
 
   useEffect(() => { if (!loading && !user) navigate("/login"); }, [user, loading, navigate]);
 
@@ -47,7 +56,7 @@ const MyRooms = () => {
     if (!user) return;
     supabase.from("listings").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        const items = (data || []).map((d: any) => ({ ...d, images: d.images || [], discount_percent: d.discount_percent || 0 })) as Listing[];
+        const items = (data || []).map((d: any) => ({ ...d, images: d.images || [], discount_percent: d.discount_percent || 0, amenities: d.amenities || [] })) as Listing[];
         setListings(items);
         setFetching(false);
       });
@@ -149,6 +158,25 @@ const MyRooms = () => {
     toast.success(t("myRooms.photosUpdated"));
   };
 
+  const startDetailsEdit = (l: Listing) => {
+    setEditingDetails(l.id);
+    setEditDescription(l.description || "");
+    setEditAmenities(l.amenities || []);
+  };
+
+  const toggleEditAmenity = (a: string) => {
+    setEditAmenities(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
+  };
+
+  const saveDetails = async (l: Listing) => {
+    const { error } = await supabase.from("listings").update({ description: editDescription, amenities: editAmenities } as any).eq("id", l.id);
+    if (error) { toast.error(error.message); return; }
+    setListings(prev => prev.map(x => x.id === l.id ? { ...x, description: editDescription, amenities: editAmenities } : x));
+    setEditingDetails(null);
+    toast.success(t("myRooms.detailsUpdated"));
+  };
+
+
   const paymentLabel = (method: string) => {
     if (method === "credit") return t("room.creditCard");
     if (method === "debit") return t("room.debitCard");
@@ -178,6 +206,7 @@ const MyRooms = () => {
             const roomRes = reservations[l.id] || [];
             const isEditing = editingRoom === l.id;
             const isUpdatingPhotos = updatingPhotos === l.id;
+            const isEditingDetails = editingDetails === l.id;
             const effectivePrice = l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price;
 
             return (
@@ -210,6 +239,9 @@ const MyRooms = () => {
                     )}
                     <Button variant="ghost" size="sm" onClick={() => startPhotoUpdate(l)} title={t("myRooms.updatePhotos")}>
                       <Image className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => startDetailsEdit(l)} title={t("myRooms.editDetails")}>
+                      <FileText className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(l)} className="text-destructive hover:text-destructive" title={t("myRooms.delete")}>
                       <Trash2 className="h-4 w-4" />
@@ -276,6 +308,43 @@ const MyRooms = () => {
                     <div className="mt-3 flex gap-2">
                       <Button size="sm" onClick={() => savePhotos(l)}>{t("myRooms.savePhotos")}</Button>
                       <Button size="sm" variant="outline" onClick={() => setUpdatingPhotos(null)}>{t("common.cancel")}</Button>
+                    </div>
+                  </div>
+                )}
+
+                {isEditingDetails && (
+                  <div className="border-t border-border bg-muted/30 p-4 space-y-4">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("myRooms.description")}</label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-muted-foreground">{t("myRooms.amenities")}</label>
+                      <div className="flex flex-wrap gap-2">
+                        {ALL_AMENITIES.map((a) => (
+                          <button
+                            key={a}
+                            type="button"
+                            onClick={() => toggleEditAmenity(a)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                              editAmenities.includes(a)
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-input text-muted-foreground hover:border-primary/50"
+                            }`}
+                          >
+                            {a}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => saveDetails(l)}>{t("myRooms.saveDetails")}</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingDetails(null)}>{t("common.cancel")}</Button>
                     </div>
                   </div>
                 )}

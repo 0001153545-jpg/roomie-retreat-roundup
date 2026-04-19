@@ -16,6 +16,7 @@ export const mapListingToRoom = (l: any): Room => ({
   amenities: ["Wi-Fi"],
   type: l.type,
   host: l.title,
+  hostId: l.user_id,
   hostAvatar: l.title.slice(0, 2).toUpperCase(),
   featured: true,
 });

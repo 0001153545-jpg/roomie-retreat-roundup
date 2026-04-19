@@ -5,19 +5,16 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useIBGEStates, useIBGECities } from "@/hooks/useIBGE";
 import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
-  const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest", state: "", city: "", phone: "", cpf: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", type: "guest", phone: "", cpf: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { states, loading: statesLoading, error: statesError } = useIBGEStates();
-  const { cities, loading: citiesLoading, error: citiesError } = useIBGECities(form.state);
 
   if (user) { navigate("/"); return null; }
 
@@ -131,35 +128,6 @@ const Register = () => {
               placeholder="(11) 99999-9999" maxLength={15}
               className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
             {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Estado</label>
-              {statesError ? (
-                <p className="text-xs text-destructive">{statesError}</p>
-              ) : (
-                <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value, city: "" })}
-                  disabled={statesLoading}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
-                  <option value="">{statesLoading ? "Carregando..." : "Selecione"}</option>
-                  {states.map((s) => <option key={s.sigla} value={s.sigla}>{s.nome}</option>)}
-                </select>
-              )}
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cidade</label>
-              {citiesError ? (
-                <p className="text-xs text-destructive">{citiesError}</p>
-              ) : (
-                <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  disabled={!form.state || citiesLoading}
-                  className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring">
-                  <option value="">{!form.state ? "Selecione o estado" : citiesLoading ? "Carregando..." : "Selecione"}</option>
-                  {cities.map((c) => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                </select>
-              )}
-            </div>
           </div>
 
           <div>
