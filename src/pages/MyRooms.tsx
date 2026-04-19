@@ -206,6 +206,7 @@ const MyRooms = () => {
             const roomRes = reservations[l.id] || [];
             const isEditing = editingRoom === l.id;
             const isUpdatingPhotos = updatingPhotos === l.id;
+            const isEditingDetails = editingDetails === l.id;
             const effectivePrice = l.discount_percent > 0 ? l.price * (1 - l.discount_percent / 100) : l.price;
 
             return (
