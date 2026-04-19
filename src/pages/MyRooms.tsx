@@ -312,6 +312,43 @@ const MyRooms = () => {
                   </div>
                 )}
 
+                {isEditingDetails && (
+                  <div className="border-t border-border bg-muted/30 p-4 space-y-4">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("myRooms.description")}</label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={4}
+                        className="w-full rounded-lg border border-input bg-background p-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-muted-foreground">{t("myRooms.amenities")}</label>
+                      <div className="flex flex-wrap gap-2">
+                        {ALL_AMENITIES.map((a) => (
+                          <button
+                            key={a}
+                            type="button"
+                            onClick={() => toggleEditAmenity(a)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                              editAmenities.includes(a)
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-input text-muted-foreground hover:border-primary/50"
+                            }`}
+                          >
+                            {a}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => saveDetails(l)}>{t("myRooms.saveDetails")}</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingDetails(null)}>{t("common.cancel")}</Button>
+                    </div>
+                  </div>
+                )}
+
                 {isExpanded && (
                   <div className="border-t border-border p-4">
                     <h4 className="mb-3 font-heading text-sm font-semibold text-foreground">{t("myRooms.reservations")}</h4>
