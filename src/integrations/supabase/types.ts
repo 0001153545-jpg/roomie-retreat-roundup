@@ -37,6 +37,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          amenities: string[]
           city: string
           created_at: string
           description: string | null
@@ -52,6 +53,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amenities?: string[]
           city: string
           created_at?: string
           description?: string | null
@@ -67,6 +69,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amenities?: string[]
           city?: string
           created_at?: string
           description?: string | null
