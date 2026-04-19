@@ -158,7 +158,25 @@ const MyRooms = () => {
     toast.success(t("myRooms.photosUpdated"));
   };
 
-  const paymentLabel = (method: string) => {
+  const startDetailsEdit = (l: Listing) => {
+    setEditingDetails(l.id);
+    setEditDescription(l.description || "");
+    setEditAmenities(l.amenities || []);
+  };
+
+  const toggleEditAmenity = (a: string) => {
+    setEditAmenities(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
+  };
+
+  const saveDetails = async (l: Listing) => {
+    const { error } = await supabase.from("listings").update({ description: editDescription, amenities: editAmenities } as any).eq("id", l.id);
+    if (error) { toast.error(error.message); return; }
+    setListings(prev => prev.map(x => x.id === l.id ? { ...x, description: editDescription, amenities: editAmenities } : x));
+    setEditingDetails(null);
+    toast.success(t("myRooms.detailsUpdated"));
+  };
+
+
     if (method === "credit") return t("room.creditCard");
     if (method === "debit") return t("room.debitCard");
     if (method === "pix") return "PIX";
