@@ -239,6 +239,9 @@ const MyRooms = () => {
                     <Button variant="ghost" size="sm" onClick={() => startPhotoUpdate(l)} title={t("myRooms.updatePhotos")}>
                       <Image className="h-4 w-4" />
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => startDetailsEdit(l)} title={t("myRooms.editDetails")}>
+                      <FileText className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(l)} className="text-destructive hover:text-destructive" title={t("myRooms.delete")}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
