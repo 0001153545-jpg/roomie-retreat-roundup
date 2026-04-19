@@ -24,6 +24,7 @@ export interface Room {
   amenities: string[];
   type: string;
   host: string;
+  hostId?: string;
   hostAvatar: string;
   featured?: boolean;
 }

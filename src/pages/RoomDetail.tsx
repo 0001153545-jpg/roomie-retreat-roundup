@@ -124,9 +124,10 @@ const RoomDetail = () => {
           guests: l.guests,
           image: l.image_url || "/placeholder.svg",
           images: l.images?.length > 0 ? l.images : [l.image_url || "/placeholder.svg"],
-          amenities: ["Wi-Fi"],
+          amenities: l.amenities && l.amenities.length > 0 ? l.amenities : ["Wi-Fi"],
           type: l.type,
           host: hostData?.full_name || l.title,
+          hostId: l.user_id,
           hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
         });
       }
