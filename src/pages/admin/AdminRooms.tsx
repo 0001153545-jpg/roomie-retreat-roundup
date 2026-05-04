@@ -109,7 +109,7 @@ const AdminRooms = () => {
                     <TableCell className="font-medium">{l.title}</TableCell>
                     <TableCell>{profiles[l.user_id] || "—"}</TableCell>
                     <TableCell>{l.city}, {l.state}</TableCell>
-                    <TableCell>R$ {Number(l.price).toFixed(2)}</TableCell>
+                    <TableCell className="money text-right">{formatPrice(Number(l.price))}</TableCell>
                     <TableCell>
                       <Badge variant={isBooked ? "destructive" : "default"} className={!isBooked ? "bg-green-600 hover:bg-green-700" : ""}>
                         {isBooked ? "Alugado" : "Disponível"}
