@@ -190,7 +190,7 @@ const AdminFinancial = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Receita Total</CardTitle>
             <div className="p-2 rounded-lg text-green-600 bg-green-100"><DollarSign className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-green-600 money">{formatPrice(totalRevenue)}</p></CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
