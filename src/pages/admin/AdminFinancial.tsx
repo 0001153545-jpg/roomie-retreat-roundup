@@ -331,8 +331,8 @@ const AdminFinancial = () => {
               <TableHead>Quarto</TableHead>
               <TableHead>Check-in</TableHead>
               <TableHead>Check-out</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Comissão</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
+              <TableHead className="text-right">Comissão</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Data</TableHead>
             </TableRow>
