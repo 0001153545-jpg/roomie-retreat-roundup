@@ -93,7 +93,7 @@ const AdminRooms = () => {
               <TableHead>Quarto</TableHead>
               <TableHead>Anunciante</TableHead>
               <TableHead>Cidade</TableHead>
-              <TableHead>Preço</TableHead>
+              <TableHead className="text-right">Preço</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Criado em</TableHead>
             </TableRow>
