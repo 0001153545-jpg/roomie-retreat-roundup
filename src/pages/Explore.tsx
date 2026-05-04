@@ -8,7 +8,7 @@ import { MapPin, TrendingUp } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { mapListingToRoom } from "@/lib/listings";
+import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 
 const Explore = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
@@ -17,8 +17,8 @@ const Explore = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("listings").select("*").then(({ data }) => {
-      if (data) setRooms(data.map(mapListingToRoom));
+    supabase.from("listings").select("*").then(async ({ data }) => {
+      if (data) setRooms(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
       setLoading(false);
     });
   }, []);
