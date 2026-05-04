@@ -35,8 +35,14 @@ const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
         <div className="mb-1 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="h-3.5 w-3.5" />{room.city}, {room.state}</div>
         <h3 className="font-heading text-base font-semibold text-card-foreground line-clamp-1">{roomTitle}</h3>
         <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent text-accent" />{room.rating}</span>
-          <span>({room.reviewCount} {t("search.reviews")})</span>
+          {room.reviewCount > 0 ? (
+            <>
+              <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent text-accent" />{room.rating.toFixed(1)}</span>
+              <span>({room.reviewCount} {t("search.reviews")})</span>
+            </>
+          ) : (
+            <span className="text-xs italic">{t("search.noReviews") !== "search.noReviews" ? t("search.noReviews") : "Sem avaliações"}</span>
+          )}
           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{room.guests}</span>
         </div>
         <div className="mt-3 flex items-baseline gap-2">

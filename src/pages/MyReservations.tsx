@@ -97,12 +97,12 @@ const MyReservations = () => {
                     <span>{nights} {t("room.nights")}</span>
                   </div>
                 </div>
-                <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center sm:self-stretch sm:min-w-[140px]">
-                  <span className="money font-heading text-lg font-bold leading-none text-foreground inline-flex h-9 items-center">
+                <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-center sm:self-stretch sm:w-44 sm:shrink-0">
+                  <span className="money font-heading text-lg font-bold leading-none text-foreground inline-flex h-9 items-center justify-end tabular-nums sm:w-full sm:text-right">
                     {formatPrice(Number(res.total))}
                   </span>
                   {res.status === "confirmed" && (
-                    <Button variant="outline" size="sm" className="h-9" onClick={() => handleCancel(res.id)}>
+                    <Button variant="outline" size="sm" className="h-9 sm:w-full" onClick={() => handleCancel(res.id)}>
                       {t("reservations.cancel")}
                     </Button>
                   )}
