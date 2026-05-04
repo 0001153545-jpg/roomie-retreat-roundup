@@ -221,7 +221,7 @@ const AdminFinancial = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-red-600">{cancelledCount}</p>
-              <p className="text-xs text-muted-foreground mt-1">R$ {cancelledRevenue.toFixed(2)} perdidos</p>
+              <p className="text-xs text-muted-foreground mt-1 money">{formatPrice(cancelledRevenue)} perdidos</p>
             </CardContent>
           </Card>
         )}
