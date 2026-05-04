@@ -25,6 +25,7 @@ interface Reservation {
 }
 
 const AdminRooms = () => {
+  const { formatPrice } = useCurrency();
   const [listings, setListings] = useState<Listing[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
