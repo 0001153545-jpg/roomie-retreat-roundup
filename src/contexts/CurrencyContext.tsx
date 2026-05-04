@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
-import { useLanguage } from "./LanguageContext";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 
 export type Currency = "BRL" | "USD" | "EUR";
 
@@ -11,8 +10,10 @@ interface CurrencyContextType {
   rate: number;
 }
 
+// Conversion rates from BRL base
 const rates: Record<Currency, number> = { BRL: 1, USD: 0.18, EUR: 0.17 };
 const symbols: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
+const localeFor: Record<Currency, string> = { BRL: "pt-BR", USD: "en-US", EUR: "es-ES" };
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
@@ -22,16 +23,11 @@ export const useCurrency = () => {
   return ctx;
 };
 
-const langToCurrency: Record<string, Currency> = { pt: "BRL", en: "USD", es: "EUR" };
-
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
-  const { language } = useLanguage();
   const [currency, setCurrencyState] = useState<Currency>(() => {
     const saved = localStorage.getItem("currency") as Currency;
     return saved && rates[saved] ? saved : "BRL";
   });
-
-  // Currency is now independent from language
 
   const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);
@@ -39,8 +35,18 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const formatPrice = useCallback((price: number) => {
-    const converted = price * rates[currency];
-    return `${symbols[currency]} ${converted.toFixed(currency === "BRL" ? 0 : 2)}`;
+    const safe = typeof price === "number" && isFinite(price) ? price : 0;
+    const converted = safe * rates[currency];
+    try {
+      return converted.toLocaleString(localeFor[currency], {
+        style: "currency",
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    } catch {
+      return `${symbols[currency]} ${converted.toFixed(2)}`;
+    }
   }, [currency]);
 
   return (
