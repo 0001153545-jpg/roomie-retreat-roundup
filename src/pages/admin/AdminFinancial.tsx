@@ -32,6 +32,7 @@ interface Reservation {
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const AdminFinancial = () => {
+  const { formatPrice } = useCurrency();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [listingOwners, setListingOwners] = useState<Record<string, string>>({});
