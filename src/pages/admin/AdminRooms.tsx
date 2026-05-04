@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Listing {
   id: string;
@@ -24,6 +25,7 @@ interface Reservation {
 }
 
 const AdminRooms = () => {
+  const { formatPrice } = useCurrency();
   const [listings, setListings] = useState<Listing[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
@@ -91,7 +93,7 @@ const AdminRooms = () => {
               <TableHead>Quarto</TableHead>
               <TableHead>Anunciante</TableHead>
               <TableHead>Cidade</TableHead>
-              <TableHead>Preço</TableHead>
+              <TableHead className="text-right">Preço</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Criado em</TableHead>
             </TableRow>
@@ -107,7 +109,7 @@ const AdminRooms = () => {
                     <TableCell className="font-medium">{l.title}</TableCell>
                     <TableCell>{profiles[l.user_id] || "—"}</TableCell>
                     <TableCell>{l.city}, {l.state}</TableCell>
-                    <TableCell>R$ {Number(l.price).toFixed(2)}</TableCell>
+                    <TableCell className="money text-right">{formatPrice(Number(l.price))}</TableCell>
                     <TableCell>
                       <Badge variant={isBooked ? "destructive" : "default"} className={!isBooked ? "bg-green-600 hover:bg-green-700" : ""}>
                         {isBooked ? "Alugado" : "Disponível"}

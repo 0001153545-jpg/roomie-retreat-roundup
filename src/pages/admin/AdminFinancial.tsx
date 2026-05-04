@@ -13,6 +13,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Reservation {
   id: string;
@@ -31,6 +32,7 @@ interface Reservation {
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const AdminFinancial = () => {
+  const { formatPrice } = useCurrency();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [listingOwners, setListingOwners] = useState<Record<string, string>>({});
@@ -188,14 +190,14 @@ const AdminFinancial = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Receita Total</CardTitle>
             <div className="p-2 rounded-lg text-green-600 bg-green-100"><DollarSign className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-green-600">R$ {totalRevenue.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-green-600 money">{formatPrice(totalRevenue)}</p></CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Receita do Mês</CardTitle>
             <div className="p-2 rounded-lg text-blue-600 bg-blue-100"><CalendarIcon className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-blue-600">R$ {monthlyRevenue.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-blue-600 money">{formatPrice(monthlyRevenue)}</p></CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-violet-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -209,7 +211,7 @@ const AdminFinancial = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Médio</CardTitle>
             <div className="p-2 rounded-lg text-amber-600 bg-amber-100"><BarChart3 className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-amber-600">R$ {avgTicket.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-amber-600 money">{formatPrice(avgTicket)}</p></CardContent>
         </Card>
         {cancelledCount > 0 && (
           <Card className="shadow-sm border-l-4 border-l-red-500">
@@ -219,7 +221,7 @@ const AdminFinancial = () => {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold text-red-600">{cancelledCount}</p>
-              <p className="text-xs text-muted-foreground mt-1">R$ {cancelledRevenue.toFixed(2)} perdidos</p>
+              <p className="text-xs text-muted-foreground mt-1 money">{formatPrice(cancelledRevenue)} perdidos</p>
             </CardContent>
           </Card>
         )}
@@ -329,8 +331,8 @@ const AdminFinancial = () => {
               <TableHead>Quarto</TableHead>
               <TableHead>Check-in</TableHead>
               <TableHead>Check-out</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Comissão</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
+              <TableHead className="text-right">Comissão</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Data</TableHead>
             </TableRow>
@@ -347,10 +349,10 @@ const AdminFinancial = () => {
                   <TableCell className="font-medium">{r.room_title}</TableCell>
                   <TableCell>{new Date(r.check_in).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>{new Date(r.check_out).toLocaleDateString("pt-BR")}</TableCell>
-                  <TableCell className={r.status === "cancelled" ? "text-red-500 line-through" : "text-green-600 font-semibold"}>
-                    R$ {Number(r.total).toFixed(2)}
+                  <TableCell className={`money text-right ${r.status === "cancelled" ? "text-red-500 line-through" : "text-green-600 font-semibold"}`}>
+                    {formatPrice(Number(r.total))}
                   </TableCell>
-                  <TableCell className="text-amber-600">R$ {Number(r.fee).toFixed(2)}</TableCell>
+                  <TableCell className="text-amber-600 money text-right">{formatPrice(Number(r.fee))}</TableCell>
                   <TableCell>{statusBadge(r.status)}</TableCell>
                   <TableCell>{new Date(r.created_at).toLocaleDateString("pt-BR")}</TableCell>
                 </TableRow>
