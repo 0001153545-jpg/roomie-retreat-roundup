@@ -40,8 +40,8 @@ const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{room.guests}</span>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="font-heading text-lg font-bold text-foreground">{formatPrice(room.price)}</span>
-          {room.originalPrice && <span className="text-sm text-muted-foreground line-through">{formatPrice(room.originalPrice)}</span>}
+          <span className="font-heading text-lg font-bold text-foreground money">{formatPrice(room.price)}</span>
+          {room.originalPrice && <span className="text-sm text-muted-foreground line-through money">{formatPrice(room.originalPrice)}</span>}
           <span className="text-sm text-muted-foreground">{t("search.night")}</span>
         </div>
       </div>
