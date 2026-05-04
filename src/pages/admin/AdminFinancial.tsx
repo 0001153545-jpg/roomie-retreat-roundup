@@ -349,10 +349,10 @@ const AdminFinancial = () => {
                   <TableCell className="font-medium">{r.room_title}</TableCell>
                   <TableCell>{new Date(r.check_in).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>{new Date(r.check_out).toLocaleDateString("pt-BR")}</TableCell>
-                  <TableCell className={r.status === "cancelled" ? "text-red-500 line-through" : "text-green-600 font-semibold"}>
-                    R$ {Number(r.total).toFixed(2)}
+                  <TableCell className={`money text-right ${r.status === "cancelled" ? "text-red-500 line-through" : "text-green-600 font-semibold"}`}>
+                    {formatPrice(Number(r.total))}
                   </TableCell>
-                  <TableCell className="text-amber-600">R$ {Number(r.fee).toFixed(2)}</TableCell>
+                  <TableCell className="text-amber-600 money text-right">{formatPrice(Number(r.fee))}</TableCell>
                   <TableCell>{statusBadge(r.status)}</TableCell>
                   <TableCell>{new Date(r.created_at).toLocaleDateString("pt-BR")}</TableCell>
                 </TableRow>
