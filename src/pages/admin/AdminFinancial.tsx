@@ -197,7 +197,7 @@ const AdminFinancial = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Receita do Mês</CardTitle>
             <div className="p-2 rounded-lg text-blue-600 bg-blue-100"><CalendarIcon className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-blue-600">R$ {monthlyRevenue.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-blue-600 money">{formatPrice(monthlyRevenue)}</p></CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-violet-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
