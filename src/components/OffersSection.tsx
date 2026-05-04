@@ -3,7 +3,7 @@ import type { Room } from "@/data/mockData";
 import RoomCard from "./RoomCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { mapListingToRoom } from "@/lib/listings";
+import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 
 const OffersSection = () => {
   const { t } = useLanguage();
@@ -11,8 +11,8 @@ const OffersSection = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("listings").select("*").gt("discount_percent", 0).then(({ data }) => {
-      if (data) setOffers(data.map(mapListingToRoom));
+    supabase.from("listings").select("*").gt("discount_percent", 0).then(async ({ data }) => {
+      if (data) setOffers(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
       setLoading(false);
     });
   }, []);

@@ -10,7 +10,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
-import { mapListingToRoom } from "@/lib/listings";
+import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 
 const amenityFilters = ["Wi-Fi", "Ar condicionado", "Piscina", "Café da manhã", "Estacionamento", "Aceita animais"];
 
@@ -33,8 +33,8 @@ const SearchRooms = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("listings").select("*").then(({ data }) => {
-      if (data) setAllRooms(data.map(mapListingToRoom));
+    supabase.from("listings").select("*").then(async ({ data }) => {
+      if (data) setAllRooms(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
       setLoading(false);
     });
   }, []);
