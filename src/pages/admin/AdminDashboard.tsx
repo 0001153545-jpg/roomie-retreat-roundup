@@ -13,6 +13,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const AdminDashboard = () => {
+  const { formatPrice } = useCurrency();
   const [metrics, setMetrics] = useState({
     totalUsers: 0,
     totalOwners: 0,
