@@ -7,7 +7,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { mapListingToRoom } from "@/lib/listings";
+import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 
 const Favorites = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
@@ -22,8 +22,8 @@ const Favorites = () => {
       setLoading(false);
       return;
     }
-    supabase.from("listings").select("*").in("id", ids).then(({ data }) => {
-      if (data) setFavoriteRooms(data.map(mapListingToRoom));
+    supabase.from("listings").select("*").in("id", ids).then(async ({ data }) => {
+      if (data) setFavoriteRooms(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
       setLoading(false);
     });
   }, [favoriteIds]);

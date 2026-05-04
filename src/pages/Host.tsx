@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock } from "lucide-react";
-import { mapListingToRoom } from "@/lib/listings";
+import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 import type { Room } from "@/data/mockData";
 
 interface HostProfile { user_id: string; full_name: string | null; avatar_url: string | null; account_type: string; }
@@ -32,7 +32,7 @@ const Host = () => {
       setProfile(prof);
 
       const { data: listingsData } = await supabase.from("listings").select("*").eq("user_id", id).order("created_at", { ascending: false });
-      const mappedRooms = (listingsData || []).map(mapListingToRoom);
+      const mappedRooms = await enrichRoomsWithReviews((listingsData || []).map(mapListingToRoom));
       setRooms(mappedRooms);
 
       // Aggregate reviews for this host's rooms
