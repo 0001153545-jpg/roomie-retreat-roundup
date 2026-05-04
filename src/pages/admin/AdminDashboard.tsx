@@ -77,10 +77,10 @@ const AdminDashboard = () => {
     { label: "Usuários", value: metrics.totalUsers, icon: Users, color: "text-blue-600 bg-blue-100", border: "border-l-blue-500" },
     { label: "Anunciantes", value: metrics.totalOwners, icon: Building2, color: "text-emerald-600 bg-emerald-100", border: "border-l-emerald-500" },
     { label: "Reservas", value: metrics.totalReservations, icon: CalendarCheck, color: "text-violet-600 bg-violet-100", border: "border-l-violet-500" },
-    { label: "Receita Total", value: `R$ ${metrics.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-green-600 bg-green-100", border: "border-l-green-500" },
-    { label: "Lucro (Comissão)", value: `R$ ${metrics.totalProfit.toFixed(2)}`, icon: TrendingUp, color: "text-green-600 bg-green-100", border: "border-l-green-500" },
-    { label: "Receita do Mês", value: `R$ ${metrics.monthlyRevenue.toFixed(2)}`, icon: CalendarCheck, color: "text-blue-600 bg-blue-100", border: "border-l-blue-500" },
-    { label: "Ticket Médio", value: `R$ ${metrics.avgTicket.toFixed(2)}`, icon: BarChart3, color: "text-amber-600 bg-amber-100", border: "border-l-amber-500" },
+    { label: "Receita Total", value: formatPrice(metrics.totalRevenue), icon: DollarSign, color: "text-green-600 bg-green-100", border: "border-l-green-500" },
+    { label: "Lucro (Comissão)", value: formatPrice(metrics.totalProfit), icon: TrendingUp, color: "text-green-600 bg-green-100", border: "border-l-green-500" },
+    { label: "Receita do Mês", value: formatPrice(metrics.monthlyRevenue), icon: CalendarCheck, color: "text-blue-600 bg-blue-100", border: "border-l-blue-500" },
+    { label: "Ticket Médio", value: formatPrice(metrics.avgTicket), icon: BarChart3, color: "text-amber-600 bg-amber-100", border: "border-l-amber-500" },
   ];
 
   if (loading) {
