@@ -211,7 +211,7 @@ const AdminFinancial = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Médio</CardTitle>
             <div className="p-2 rounded-lg text-amber-600 bg-amber-100"><BarChart3 className="h-4 w-4" /></div>
           </CardHeader>
-          <CardContent><p className="text-2xl font-bold text-amber-600">R$ {avgTicket.toFixed(2)}</p></CardContent>
+          <CardContent><p className="text-2xl font-bold text-amber-600 money">{formatPrice(avgTicket)}</p></CardContent>
         </Card>
         {cancelledCount > 0 && (
           <Card className="shadow-sm border-l-4 border-l-red-500">
