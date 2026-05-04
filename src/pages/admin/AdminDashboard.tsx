@@ -104,7 +104,7 @@ const AdminDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-foreground">{c.value}</p>
+              <p className="text-2xl font-bold text-foreground money">{c.value}</p>
             </CardContent>
           </Card>
         ))}
