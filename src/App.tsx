@@ -25,6 +25,8 @@ import Favorites from "./pages/Favorites";
 import MyRooms from "./pages/MyRooms";
 import Profile from "./pages/Profile";
 import Host from "./pages/Host";
+import Chat from "./pages/Chat";
+import Conversations from "./pages/Conversations";
 import NotFound from "./pages/NotFound";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -82,6 +84,8 @@ const App = () => (
                           <Route path="/meus-quartos" element={<MyRooms />} />
                           <Route path="/perfil" element={<Profile />} />
                           <Route path="/host/:id" element={<Host />} />
+                          <Route path="/mensagens" element={<Conversations />} />
+                          <Route path="/chat" element={<Chat />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </main>

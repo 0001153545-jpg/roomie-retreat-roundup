@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import type { Language } from "@/i18n/translations";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
+import ChatBell from "@/components/ChatBell";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,6 +76,7 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ChatBell />
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="hidden sm:flex">
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
