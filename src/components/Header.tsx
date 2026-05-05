@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign, ShieldCheck } from "lucide-react";
+import { Menu, X, Globe, User, LogOut, CalendarDays, Heart, Sun, Moon, Building2, DollarSign, ShieldCheck, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
@@ -116,6 +116,9 @@ const Header = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate("/perfil")}>
                   <User className="mr-2 h-4 w-4" /> Meu Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/mensagens")}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> Mensagens
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/favoritos")}>
                   <Heart className="mr-2 h-4 w-4" /> {t("nav.favorites")}
