@@ -237,6 +237,18 @@ const RoomDetail = () => {
     } else {
       toast.success(t("room.paymentSuccess"), {
         description: `${roomTitle} — ${nights} ${t("room.nights")} — ${t("room.total")}: ${formatPrice(total)}`,
+        action: room.hostId ? {
+          label: "Entrar em contato com o proprietário",
+          onClick: async () => {
+            try {
+              const { data: convId, error: convErr } = await (supabase.rpc as any)("get_or_create_conversation", { target_host_id: room.hostId });
+              if (convErr) throw convErr;
+              navigate(`/chat?id=${convId}`);
+            } catch (e: any) {
+              toast.error("Não foi possível abrir o chat: " + (e?.message || "erro"));
+            }
+          },
+        } : undefined,
       });
       navigate("/minhas-reservas");
     }
