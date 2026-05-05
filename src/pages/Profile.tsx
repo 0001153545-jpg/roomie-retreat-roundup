@@ -107,16 +107,27 @@ const Profile = () => {
     if (file.size > 2 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 2MB"); return; }
 
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `avatars/${user!.id}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${user!.id}/avatar-${Date.now()}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage.from("property-images").upload(path, file, { upsert: true });
-    if (uploadError) { setUploading(false); toast.error("Erro ao enviar imagem"); return; }
+    const { error: uploadError } = await supabase.storage
+      .from("property-images")
+      .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
+    if (uploadError) {
+      setUploading(false);
+      toast.error("Erro ao enviar imagem: " + uploadError.message);
+      return;
+    }
 
     const { data: { publicUrl } } = supabase.storage.from("property-images").getPublicUrl(path);
 
-    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user!.id);
-    setAvatarUrl(publicUrl + "?t=" + Date.now());
+    const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user!.id);
+    if (updateError) {
+      setUploading(false);
+      toast.error("Erro ao salvar perfil: " + updateError.message);
+      return;
+    }
+    setAvatarUrl(publicUrl);
     setUploading(false);
     toast.success("Foto atualizada!");
   };
