@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          guest_id: string
+          host_id: string
+          id: string
+          last_check_out: string | null
+          last_message_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guest_id: string
+          host_id: string
+          id?: string
+          last_check_out?: string | null
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guest_id?: string
+          host_id?: string
+          id?: string
+          last_check_out?: string | null
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -38,9 +68,12 @@ export type Database = {
       listings: {
         Row: {
           amenities: string[]
+          amenities_translations: Json | null
           city: string
           created_at: string
           description: string | null
+          description_en: string | null
+          description_es: string | null
           discount_percent: number | null
           guests: number
           id: string
@@ -54,9 +87,12 @@ export type Database = {
         }
         Insert: {
           amenities?: string[]
+          amenities_translations?: Json | null
           city: string
           created_at?: string
           description?: string | null
+          description_en?: string | null
+          description_es?: string | null
           discount_percent?: number | null
           guests?: number
           id?: string
@@ -70,9 +106,12 @@ export type Database = {
         }
         Update: {
           amenities?: string[]
+          amenities_translations?: Json | null
           city?: string
           created_at?: string
           description?: string | null
+          description_en?: string | null
+          description_es?: string | null
           discount_percent?: number | null
           guests?: number
           id?: string
@@ -85,6 +124,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          read_by_guest: boolean
+          read_by_host: boolean
+          sender_id: string
+          source_lang: string
+          translations: Json
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_by_guest?: boolean
+          read_by_host?: boolean
+          sender_id: string
+          source_lang?: string
+          translations?: Json
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_by_guest?: boolean
+          read_by_host?: boolean
+          sender_id?: string
+          source_lang?: string
+          translations?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -248,6 +334,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      get_or_create_conversation: {
+        Args: { target_host_id: string }
+        Returns: string
+      }
       get_public_profile: {
         Args: { target_user_id: string }
         Returns: {
@@ -267,6 +357,10 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      refresh_conversation_checkout: {
+        Args: { conv_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
