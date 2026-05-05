@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,18 +11,42 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock } from "lucide-react";
 import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
+import { getOrCreateConversation } from "@/lib/chat";
+import { toast } from "sonner";
 import type { Room } from "@/data/mockData";
 
 interface HostProfile { user_id: string; full_name: string | null; avatar_url: string | null; account_type: string; }
 
 const Host = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const [profile, setProfile] = useState<HostProfile | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
+  const [contacting, setContacting] = useState(false);
+
+  const handleContact = async () => {
+    if (!user) { toast.error("Faça login para entrar em contato"); navigate("/login"); return; }
+    if (!id) return;
+    if (user.id === id) { toast.error("Você não pode iniciar conversa consigo mesmo"); return; }
+    setContacting(true);
+    try {
+      const convId = await getOrCreateConversation(id);
+      navigate(`/chat?id=${convId}`);
+    } catch (e: any) {
+      if (String(e?.message || "").includes("reservation_required")) {
+        toast.error("Faça uma reserva antes de entrar em contato com o anfitrião.");
+      } else {
+        toast.error("Erro ao iniciar conversa: " + (e?.message || "desconhecido"));
+      }
+    } finally {
+      setContacting(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -113,10 +138,8 @@ const Host = () => {
               </div>
             </div>
 
-            <Button variant="outline" className="gap-2" asChild>
-              <Link to="/contato">
-                <MessageCircle className="h-4 w-4" /> {t("host.contact")}
-              </Link>
+            <Button variant="outline" className="gap-2" onClick={handleContact} disabled={contacting}>
+              <MessageCircle className="h-4 w-4" /> {t("host.contact")}
             </Button>
           </div>
         </CardContent>

@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { translateText } from "@/lib/chat";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGE";
 
 const ALL_AMENITIES = [
@@ -106,6 +107,20 @@ const Advertise = () => {
       uploadedUrls.push(urlData.publicUrl);
     }
 
+    // Pre-translate description (PT -> EN/ES) and amenities for cache
+    let description_en: string | null = null;
+    let description_es: string | null = null;
+    if (form.description.trim()) {
+      const tr = await translateText(form.description, "pt", ["en", "es"]);
+      description_en = tr.en || null;
+      description_es = tr.es || null;
+    }
+    const amenities_translations: Record<string, { en: string; es: string }> = {};
+    for (const a of selectedAmenities) {
+      const tr = await translateText(a, "pt", ["en", "es"]);
+      amenities_translations[a] = { en: tr.en || a, es: tr.es || a };
+    }
+
     const { error } = await supabase.from("listings").insert({
       user_id: user.id,
       title: form.title,
@@ -115,7 +130,10 @@ const Advertise = () => {
       price: Number(form.price),
       guests: Number(form.guests),
       description: form.description,
+      description_en,
+      description_es,
       amenities: selectedAmenities,
+      amenities_translations,
       image_url: uploadedUrls[0] || "",
       images: uploadedUrls,
     } as any);

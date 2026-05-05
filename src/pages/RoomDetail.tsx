@@ -85,7 +85,12 @@ const RoomDetail = () => {
   const removeChild = (i: number) => setChildren(children.filter((_, idx) => idx !== i));
   const updateChildAge = (i: number, age: number) => { const u = [...children]; u[i] = Math.min(17, Math.max(0, age)); setChildren(u); };
 
-  const translateAmenity = (a: string) => amenityTranslations[a]?.[language] || a;
+  const translateAmenity = (a: string) => {
+    if (language === "pt") return amenityTranslations[a]?.pt || a;
+    const dynamic = (room as any)?.amenitiesTranslations?.[a]?.[language];
+    if (dynamic) return dynamic;
+    return amenityTranslations[a]?.[language] || a;
+  };
 
   const isDateBooked = (date: Date) => {
     return bookedDates.some(r => date >= r.start && date < r.end);
@@ -111,10 +116,13 @@ const RoomDetail = () => {
         const { data: hostRows } = await supabase.rpc("get_public_profile", { target_user_id: l.user_id });
         const hostData = hostRows && hostRows.length > 0 ? hostRows[0] : null;
         if (hostData) setHostProfile(hostData);
+        const localizedDesc = language === "en" ? (l.description_en || l.description || "")
+          : language === "es" ? (l.description_es || l.description || "")
+          : (l.description || "");
         setRoom({
           id: l.id,
           title: l.title,
-          description: l.description || "",
+          description: localizedDesc,
           city: l.city,
           state: l.state,
           price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
@@ -129,7 +137,8 @@ const RoomDetail = () => {
           host: hostData?.full_name || l.title,
           hostId: l.user_id,
           hostAvatar: (hostData?.full_name || l.title).slice(0, 2).toUpperCase(),
-        });
+          amenitiesTranslations: l.amenities_translations || {},
+        } as any);
       }
       setRoomLoading(false);
     });
@@ -237,6 +246,18 @@ const RoomDetail = () => {
     } else {
       toast.success(t("room.paymentSuccess"), {
         description: `${roomTitle} — ${nights} ${t("room.nights")} — ${t("room.total")}: ${formatPrice(total)}`,
+        action: room.hostId ? {
+          label: "Entrar em contato com o proprietário",
+          onClick: async () => {
+            try {
+              const { data: convId, error: convErr } = await (supabase.rpc as any)("get_or_create_conversation", { target_host_id: room.hostId });
+              if (convErr) throw convErr;
+              navigate(`/chat?id=${convId}`);
+            } catch (e: any) {
+              toast.error("Não foi possível abrir o chat: " + (e?.message || "erro"));
+            }
+          },
+        } : undefined,
       });
       navigate("/minhas-reservas");
     }

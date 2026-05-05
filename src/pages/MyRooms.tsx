@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Building2, ChevronDown, ChevronUp, Edit2, Save, X, Users, CreditCard, Percent, Trash2, Upload, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { translateText } from "@/lib/chat";
 
 const ALL_AMENITIES = [
   "Wi-Fi", "Ar condicionado", "Estacionamento", "Café da manhã", "Piscina",
@@ -169,7 +170,25 @@ const MyRooms = () => {
   };
 
   const saveDetails = async (l: Listing) => {
-    const { error } = await supabase.from("listings").update({ description: editDescription, amenities: editAmenities } as any).eq("id", l.id);
+    let description_en: string | null = null;
+    let description_es: string | null = null;
+    if (editDescription.trim()) {
+      const tr = await translateText(editDescription, "pt", ["en", "es"]);
+      description_en = tr.en || null;
+      description_es = tr.es || null;
+    }
+    const amenities_translations: Record<string, { en: string; es: string }> = {};
+    for (const a of editAmenities) {
+      const tr = await translateText(a, "pt", ["en", "es"]);
+      amenities_translations[a] = { en: tr.en || a, es: tr.es || a };
+    }
+    const { error } = await supabase.from("listings").update({
+      description: editDescription,
+      description_en,
+      description_es,
+      amenities: editAmenities,
+      amenities_translations,
+    } as any).eq("id", l.id);
     if (error) { toast.error(error.message); return; }
     setListings(prev => prev.map(x => x.id === l.id ? { ...x, description: editDescription, amenities: editAmenities } : x));
     setEditingDetails(null);
