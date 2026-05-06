@@ -93,6 +93,16 @@ Deno.serve(async (req) => {
       }),
     });
 
+      });
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      console.error("AI gateway fetch failed/timed out:", fetchErr);
+      return new Response(JSON.stringify({ translations: {} }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    clearTimeout(timeoutId);
+
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error:", resp.status, t);
