@@ -91,8 +91,6 @@ Deno.serve(async (req) => {
         ],
         tool_choice: { type: "function", function: { name: "return_translations" } },
       }),
-    });
-
       });
     } catch (fetchErr) {
       clearTimeout(timeoutId);
