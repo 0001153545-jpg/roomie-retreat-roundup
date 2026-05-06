@@ -326,8 +326,14 @@ const RoomDetail = () => {
           </div>
           <h1 className="mb-2 font-heading text-2xl font-bold text-foreground sm:text-3xl">{roomTitle}</h1>
           <div className="mb-4 flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1 font-medium"><Star className="h-4 w-4 fill-accent text-accent" /> {room.rating}</span>
-            <span className="text-muted-foreground">({room.reviewCount} {t("search.reviews")})</span>
+            {room.reviewCount > 0 ? (
+              <>
+                <span className="flex items-center gap-1 font-medium tabular-nums"><Star className="h-4 w-4 fill-accent text-accent" /> {room.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground tabular-nums">({room.reviewCount} {t("search.reviews")})</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground italic">Sem avaliações</span>
+            )}
             <span className="flex items-center gap-1 text-muted-foreground"><Users className="h-4 w-4" /> {t("room.upToGuests", { n: String(room.guests) })}</span>
           </div>
 
