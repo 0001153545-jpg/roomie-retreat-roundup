@@ -18,6 +18,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { translateText } from "@/lib/chat";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
@@ -63,6 +64,7 @@ const RoomDetail = () => {
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
+  const [reviewTranslations, setReviewTranslations] = useState<Record<string, string>>({});
   const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [reserving, setReserving] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
