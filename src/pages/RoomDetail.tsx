@@ -533,10 +533,10 @@ const RoomDetail = () => {
 
             {checkInDate && checkOutDate && (
               <div className="mb-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="text-foreground">{formatPrice(fee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground money tabular-nums">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="money text-foreground tabular-nums">{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="money text-foreground tabular-nums">{formatPrice(fee)}</span></div>
                 <Separator />
-                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="text-foreground">{formatPrice(total)}</span></div>
+                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="money text-foreground tabular-nums">{formatPrice(total)}</span></div>
               </div>
             )}
 
