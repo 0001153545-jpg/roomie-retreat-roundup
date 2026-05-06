@@ -127,7 +127,7 @@ const RoomDetail = () => {
           state: l.state,
           price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
           originalPrice: l.discount_percent > 0 ? Number(l.price) : undefined,
-          rating: 4.5,
+          rating: 0,
           reviewCount: 0,
           guests: l.guests,
           image: l.image_url || "/placeholder.svg",
