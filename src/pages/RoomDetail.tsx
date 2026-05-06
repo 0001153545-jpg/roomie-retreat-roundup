@@ -150,7 +150,12 @@ const RoomDetail = () => {
       .then(async ({ data }) => {
         if (data) {
           setDbReviews(data as DbReview[]);
-          const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
+          const reviews = data as DbReview[];
+          if (reviews.length > 0) {
+            const avg = reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length;
+            setRoom((prev) => prev ? { ...prev, rating: Math.round(avg * 10) / 10, reviewCount: reviews.length } : prev);
+          }
+          const userIds = [...new Set(reviews.map(r => r.user_id))];
           if (userIds.length > 0) {
             const { data: profs } = await supabase.rpc("get_public_profiles", { target_user_ids: userIds });
             if (profs) {
