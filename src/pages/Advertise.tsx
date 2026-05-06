@@ -90,6 +90,7 @@ const Advertise = () => {
     if (!user) { toast.error(t("advertise.loginRequired")); navigate("/login"); return; }
     if (accountType !== "owner") { toast.error(t("advertise.ownerOnly")); return; }
     if (!form.title || !form.city || !form.price) { toast.error(t("advertise.fillRequired")); return; }
+    if (imageFiles.length < 3) { toast.error("Você precisa adicionar 3 fotos do quarto"); return; }
 
     setSubmitting(true);
     const uploadedUrls: string[] = [];

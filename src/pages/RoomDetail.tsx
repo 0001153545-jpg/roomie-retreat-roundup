@@ -18,6 +18,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { translateText } from "@/lib/chat";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
@@ -63,6 +64,7 @@ const RoomDetail = () => {
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
+  const [reviewTranslations, setReviewTranslations] = useState<Record<string, string>>({});
   const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [reserving, setReserving] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
@@ -127,7 +129,7 @@ const RoomDetail = () => {
           state: l.state,
           price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
           originalPrice: l.discount_percent > 0 ? Number(l.price) : undefined,
-          rating: 4.5,
+          rating: 0,
           reviewCount: 0,
           guests: l.guests,
           image: l.image_url || "/placeholder.svg",
@@ -150,7 +152,12 @@ const RoomDetail = () => {
       .then(async ({ data }) => {
         if (data) {
           setDbReviews(data as DbReview[]);
-          const userIds = [...new Set((data as DbReview[]).map(r => r.user_id))];
+          const reviews = data as DbReview[];
+          if (reviews.length > 0) {
+            const avg = reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length;
+            setRoom((prev) => prev ? { ...prev, rating: Math.round(avg * 10) / 10, reviewCount: reviews.length } : prev);
+          }
+          const userIds = [...new Set(reviews.map(r => r.user_id))];
           if (userIds.length > 0) {
             const { data: profs } = await supabase.rpc("get_public_profiles", { target_user_ids: userIds });
             if (profs) {
@@ -187,6 +194,28 @@ const RoomDetail = () => {
         }
       });
   }, [id]);
+
+  // Auto-translate review comments when viewing in EN/ES
+  useEffect(() => {
+    if (language === "pt" || dbReviews.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const updates: Record<string, string> = {};
+      for (const r of dbReviews) {
+        const key = `${r.id}-${language}`;
+        if (reviewTranslations[key] || !r.comment?.trim()) continue;
+        try {
+          const tr = await translateText(r.comment, "pt", [language]);
+          if (tr[language]) updates[key] = tr[language];
+        } catch (_) {/* skip */}
+        if (cancelled) return;
+      }
+      if (!cancelled && Object.keys(updates).length > 0) {
+        setReviewTranslations((prev) => ({ ...prev, ...updates }));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [language, dbReviews]);
 
   if (roomLoading) {
     return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
@@ -321,8 +350,14 @@ const RoomDetail = () => {
           </div>
           <h1 className="mb-2 font-heading text-2xl font-bold text-foreground sm:text-3xl">{roomTitle}</h1>
           <div className="mb-4 flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1 font-medium"><Star className="h-4 w-4 fill-accent text-accent" /> {room.rating}</span>
-            <span className="text-muted-foreground">({room.reviewCount} {t("search.reviews")})</span>
+            {room.reviewCount > 0 ? (
+              <>
+                <span className="flex items-center gap-1 font-medium tabular-nums"><Star className="h-4 w-4 fill-accent text-accent" /> {room.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground tabular-nums">({room.reviewCount} {t("search.reviews")})</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground italic">Sem avaliações</span>
+            )}
             <span className="flex items-center gap-1 text-muted-foreground"><Users className="h-4 w-4" /> {t("room.upToGuests", { n: String(room.guests) })}</span>
           </div>
 
@@ -397,7 +432,11 @@ const RoomDetail = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language !== "pt" && reviewTranslations[`${review.id}-${language}`]
+                      ? reviewTranslations[`${review.id}-${language}`]
+                      : review.comment}
+                  </p>
                 </div>
               );
             })}
@@ -415,8 +454,8 @@ const RoomDetail = () => {
             ) : (
             <>
             <div className="mb-4 flex items-baseline gap-2 flex-wrap">
-              <span className="font-heading text-2xl font-bold text-foreground">{formatPrice(room.price)}</span>
-              {room.originalPrice && <span className="text-sm text-muted-foreground line-through">{formatPrice(room.originalPrice)}</span>}
+              <span className="money font-heading text-2xl font-bold text-foreground tabular-nums">{formatPrice(room.price)}</span>
+              {room.originalPrice && <span className="money text-sm text-muted-foreground line-through tabular-nums">{formatPrice(room.originalPrice)}</span>}
               {room.originalPrice && (
                 <Badge className="bg-primary text-primary-foreground border-0">{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF</Badge>
               )}
@@ -522,10 +561,10 @@ const RoomDetail = () => {
 
             {checkInDate && checkOutDate && (
               <div className="mb-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="text-foreground">{formatPrice(fee)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground money tabular-nums">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="money text-foreground tabular-nums">{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="money text-foreground tabular-nums">{formatPrice(fee)}</span></div>
                 <Separator />
-                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="text-foreground">{formatPrice(total)}</span></div>
+                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="money text-foreground tabular-nums">{formatPrice(total)}</span></div>
               </div>
             )}
 

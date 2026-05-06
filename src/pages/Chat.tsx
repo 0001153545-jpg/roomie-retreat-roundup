@@ -105,18 +105,14 @@ const ChatPage = () => {
     if (!body && !imageUrl) return;
     setSending(true);
 
-    let translations: Record<string, string> = {};
-    if (body) {
-      translations = await translateText(body, language, partnerLang as string[]);
-    }
-
+    // Optimistic insert (no translations yet) — fast UX
     const { data, error } = await supabase.from("messages").insert({
       conversation_id: conv.id,
       sender_id: user.id,
       body,
       image_url: imageUrl,
       source_lang: language,
-      translations,
+      translations: {},
       read_by_guest: conv.guest_id === user.id,
       read_by_host: conv.host_id === user.id,
     } as any).select().single();
@@ -126,8 +122,19 @@ const ChatPage = () => {
       toast.error("Erro ao enviar: " + error.message);
       return;
     }
-    setMessages((prev) => prev.some((x) => x.id === (data as Message).id) ? prev : [...prev, data as Message]);
+    const inserted = data as Message;
+    setMessages((prev) => prev.some((x) => x.id === inserted.id) ? prev : [...prev, inserted]);
     setText("");
+
+    // Translate in background, then patch the row (UPDATE realtime will sync recipient)
+    if (body) {
+      translateText(body, language, partnerLang as string[]).then(async (translations) => {
+        if (translations && Object.keys(translations).length > 0) {
+          await supabase.from("messages").update({ translations } as any).eq("id", inserted.id);
+          setMessages((prev) => prev.map((x) => x.id === inserted.id ? { ...x, translations } : x));
+        }
+      }).catch((e) => console.warn("bg translate failed", e));
+    }
   };
 
   const handleSendText = async (e: React.FormEvent) => {
