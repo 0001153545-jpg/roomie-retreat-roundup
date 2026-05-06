@@ -49,8 +49,14 @@ Deno.serve(async (req) => {
       `Keep tone, emojis, links, names. Do NOT add explanations. ` +
       `Return STRICT JSON with the schema {"translations": { "<code>": "<translated text>" }} for codes: ${targets.join(",")}.`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    let resp: Response;
+    try {
+      resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
+      signal: controller.signal,
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
