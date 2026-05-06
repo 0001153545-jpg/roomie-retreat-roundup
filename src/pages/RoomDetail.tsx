@@ -216,6 +216,8 @@ const RoomDetail = () => {
     })();
     return () => { cancelled = true; };
   }, [language, dbReviews]);
+
+  if (roomLoading) {
     return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
   }
 
