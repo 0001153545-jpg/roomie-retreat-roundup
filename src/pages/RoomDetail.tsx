@@ -432,7 +432,11 @@ const RoomDetail = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language !== "pt" && reviewTranslations[`${review.id}-${language}`]
+                      ? reviewTranslations[`${review.id}-${language}`]
+                      : review.comment}
+                  </p>
                 </div>
               );
             })}
