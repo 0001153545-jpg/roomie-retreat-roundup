@@ -39,8 +39,8 @@ const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
         <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
           {room.reviewCount > 0 ? (
             <>
-              <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-accent text-accent" />{room.rating.toFixed(1)}</span>
-              <span>({room.reviewCount} {t("search.reviews")})</span>
+              <span className="flex items-center gap-1 tabular-nums"><Star className="h-3.5 w-3.5 fill-accent text-accent" />{room.rating.toFixed(1)}</span>
+              <span className="tabular-nums">({room.reviewCount} {t("search.reviews")})</span>
             </>
           ) : (
             <span className="text-xs italic">{t("search.noReviews") !== "search.noReviews" ? t("search.noReviews") : "Sem avaliações"}</span>
@@ -48,8 +48,8 @@ const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{room.guests}</span>
         </div>
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="font-heading text-lg font-bold text-foreground money">{formatPrice(room.price)}</span>
-          {room.originalPrice && <span className="text-sm text-muted-foreground line-through money">{formatPrice(room.originalPrice)}</span>}
+          <span className="font-heading text-lg font-bold text-foreground money tabular-nums">{formatPrice(room.price)}</span>
+          {room.originalPrice && <span className="text-sm text-muted-foreground line-through money tabular-nums">{formatPrice(room.originalPrice)}</span>}
           <span className="text-sm text-muted-foreground">{t("search.night")}</span>
         </div>
       </div>
