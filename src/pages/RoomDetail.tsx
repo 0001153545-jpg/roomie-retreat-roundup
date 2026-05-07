@@ -196,27 +196,8 @@ const RoomDetail = () => {
       });
   }, [id]);
 
-  // Auto-translate review comments when viewing in EN/ES
-  useEffect(() => {
-    if (language === "pt" || dbReviews.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      const updates: Record<string, string> = {};
-      for (const r of dbReviews) {
-        const key = `${r.id}-${language}`;
-        if (reviewTranslations[key] || !r.comment?.trim()) continue;
-        try {
-          const tr = await translateText(r.comment, "pt", [language]);
-          if (tr[language]) updates[key] = tr[language];
-        } catch (_) {/* skip */}
-        if (cancelled) return;
-      }
-      if (!cancelled && Object.keys(updates).length > 0) {
-        setReviewTranslations((prev) => ({ ...prev, ...updates }));
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [language, dbReviews]);
+  // Auto-translate review comments reactively via shared hook
+  const reviewComments = useAutoTranslateMany(dbReviews.map((r) => r.comment), "pt");
 
   if (roomLoading) {
     return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
