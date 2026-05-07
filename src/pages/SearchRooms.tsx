@@ -61,7 +61,7 @@ const SearchRooms = () => {
       return b.reviewCount - a.reviewCount;
     });
     return result;
-  }, [cityFilter, maxPrice, selectedAmenities, sortBy, guestsParam, allRooms]);
+  }, [cityFilter, nameFilter, maxPrice, selectedAmenities, sortBy, guestsParam, allRooms]);
 
   const sortOptions = [
     { value: "rating", label: t("search.bestRating") },
