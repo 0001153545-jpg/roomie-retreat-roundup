@@ -19,6 +19,7 @@ import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { translateText } from "@/lib/chat";
+import { useAutoTranslate, useAutoTranslateMany } from "@/hooks/useAutoTranslate";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
