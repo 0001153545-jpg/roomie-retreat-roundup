@@ -49,6 +49,7 @@ const SearchRooms = () => {
     const guestsFilter = guestsParam ? Number(guestsParam) : 0;
     let result = allRooms.filter((r) => {
       if (cityFilter && !r.city.toLowerCase().includes(cityFilter.toLowerCase())) return false;
+      if (nameFilter && !r.title.toLowerCase().includes(nameFilter.toLowerCase())) return false;
       if (r.price > maxPrice) return false;
       if (selectedAmenities.length > 0 && !selectedAmenities.every((a) => r.amenities.includes(a))) return false;
       if (guestsFilter > 0 && r.guests < guestsFilter) return false;
