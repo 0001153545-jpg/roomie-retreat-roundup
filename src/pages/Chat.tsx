@@ -246,3 +246,44 @@ const ChatPage = () => {
 };
 
 export default ChatPage;
+
+function ChatMessageBubble({
+  message: m, mine, viewerLang, showOriginal, onToggleOriginal,
+}: {
+  message: Message; mine: boolean; viewerLang: any;
+  showOriginal: boolean; onToggleOriginal: () => void;
+}) {
+  const { text: shown, isTranslated } = displayText(m, viewerLang);
+  // If recipient lacks translation, fetch it on the fly via the shared hook
+  const dynamic = useAutoTranslate(
+    !isTranslated && m.body && m.source_lang !== viewerLang ? m.body : null,
+    m.source_lang || "pt",
+  );
+  const dynamicAvailable = dynamic && dynamic !== m.body;
+  const effectiveTranslated = isTranslated || dynamicAvailable;
+  const translatedText = isTranslated ? shown : (dynamicAvailable ? dynamic : (m.body || ""));
+  const finalText = showOriginal ? (m.body || "") : translatedText;
+  return (
+    <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+      <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+        {m.image_url && (
+          <img src={m.image_url} alt="anexo" className="mb-1 max-h-60 rounded-lg object-cover" />
+        )}
+        {m.body && <p className="whitespace-pre-wrap break-words">{finalText}</p>}
+        <div className={`mt-1 flex items-center gap-2 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+          <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+          {effectiveTranslated && m.body && (
+            <button
+              onClick={onToggleOriginal}
+              className="inline-flex items-center gap-0.5 underline-offset-2 hover:underline"
+              type="button"
+            >
+              <Languages className="h-3 w-3" />
+              {showOriginal ? "Ver tradução" : "Ver original"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
