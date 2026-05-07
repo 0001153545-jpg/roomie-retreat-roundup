@@ -356,7 +356,7 @@ const RoomDetail = () => {
 
           <Separator className="mb-6" />
           <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">{t("room.description")}</h2>
-          <p className="mb-6 leading-relaxed text-muted-foreground">{room.description}</p>
+          <p className="mb-6 leading-relaxed text-muted-foreground whitespace-pre-wrap">{translatedDescription}</p>
 
           <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">{t("room.amenities")}</h2>
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
