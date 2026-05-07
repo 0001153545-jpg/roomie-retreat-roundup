@@ -196,8 +196,9 @@ const RoomDetail = () => {
       });
   }, [id]);
 
-  // Auto-translate review comments reactively via shared hook
+  // Auto-translate review comments + description reactively via shared hook
   const reviewComments = useAutoTranslateMany(dbReviews.map((r) => r.comment), "pt");
+  const translatedDescription = useAutoTranslate(room?.description, "pt");
 
   if (roomLoading) {
     return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
