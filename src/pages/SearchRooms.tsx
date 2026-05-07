@@ -18,12 +18,14 @@ const SearchRooms = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const [searchParams] = useSearchParams();
+  const initialCity = searchParams.get("city") || "";
   const initialName = searchParams.get("q") || "";
   const checkInParam = searchParams.get("checkIn") || "";
   const checkOutParam = searchParams.get("checkOut") || "";
   const guestsParam = searchParams.get("guests") || "";
 
   const [cityFilter, setCityFilter] = useState(initialCity);
+  const [nameFilter, setNameFilter] = useState(initialName);
   const [maxPrice, setMaxPrice] = useState(1000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("rating");
