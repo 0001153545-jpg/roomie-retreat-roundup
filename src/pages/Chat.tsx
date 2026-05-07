@@ -204,35 +204,16 @@ const ChatPage = () => {
               {t("chat.startMessage") !== "chat.startMessage" ? t("chat.startMessage") : "Inicie a conversa enviando uma mensagem."}
             </p>
           )}
-          {messages.map((m) => {
-            const mine = m.sender_id === user.id;
-            const showOrig = showOriginal[m.id];
-            const { text: shown, isTranslated } = displayText(m, language);
-            const finalText = showOrig ? (m.body || "") : shown;
-            return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-                  {m.image_url && (
-                    <img src={m.image_url} alt="anexo" className="mb-1 max-h-60 rounded-lg object-cover" />
-                  )}
-                  {m.body && <p className="whitespace-pre-wrap break-words">{finalText}</p>}
-                  <div className={`mt-1 flex items-center gap-2 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                    {isTranslated && m.body && (
-                      <button
-                        onClick={() => setShowOriginal((p) => ({ ...p, [m.id]: !p[m.id] }))}
-                        className="inline-flex items-center gap-0.5 underline-offset-2 hover:underline"
-                        type="button"
-                      >
-                        <Languages className="h-3 w-3" />
-                        {showOrig ? "Ver tradução" : "Ver original"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {messages.map((m) => (
+            <ChatMessageBubble
+              key={m.id}
+              message={m}
+              mine={m.sender_id === user.id}
+              viewerLang={language}
+              showOriginal={!!showOriginal[m.id]}
+              onToggleOriginal={() => setShowOriginal((p) => ({ ...p, [m.id]: !p[m.id] }))}
+            />
+          ))}
         </div>
 
         {/* Input */}
