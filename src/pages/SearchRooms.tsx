@@ -18,7 +18,7 @@ const SearchRooms = () => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const [searchParams] = useSearchParams();
-  const initialCity = searchParams.get("city") || "";
+  const initialName = searchParams.get("q") || "";
   const checkInParam = searchParams.get("checkIn") || "";
   const checkOutParam = searchParams.get("checkOut") || "";
   const guestsParam = searchParams.get("guests") || "";
