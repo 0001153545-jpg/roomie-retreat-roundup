@@ -388,7 +388,7 @@ const RoomDetail = () => {
           {!isAdmin && user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
-            {allReviews.map((review) => {
+            {allReviews.map((review, idx) => {
               const canDelete = review.isDb && (isAdmin || (user && review.userId === user.id));
               return (
                 <div key={review.id} className="rounded-xl border border-border bg-card p-4">
