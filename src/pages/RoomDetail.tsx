@@ -19,6 +19,7 @@ import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { translateText } from "@/lib/chat";
+import { useAutoTranslate, useAutoTranslateMany } from "@/hooks/useAutoTranslate";
 
 const amenityIcons: Record<string, React.ElementType> = {
   "Wi-Fi": Wifi, "Ar condicionado": Wind, "Estacionamento": Car,
@@ -195,27 +196,9 @@ const RoomDetail = () => {
       });
   }, [id]);
 
-  // Auto-translate review comments when viewing in EN/ES
-  useEffect(() => {
-    if (language === "pt" || dbReviews.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      const updates: Record<string, string> = {};
-      for (const r of dbReviews) {
-        const key = `${r.id}-${language}`;
-        if (reviewTranslations[key] || !r.comment?.trim()) continue;
-        try {
-          const tr = await translateText(r.comment, "pt", [language]);
-          if (tr[language]) updates[key] = tr[language];
-        } catch (_) {/* skip */}
-        if (cancelled) return;
-      }
-      if (!cancelled && Object.keys(updates).length > 0) {
-        setReviewTranslations((prev) => ({ ...prev, ...updates }));
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [language, dbReviews]);
+  // Auto-translate review comments + description reactively via shared hook
+  const reviewComments = useAutoTranslateMany(dbReviews.map((r) => r.comment), "pt");
+  const translatedDescription = useAutoTranslate(room?.description, "pt");
 
   if (roomLoading) {
     return <div className="container-page py-20 text-center text-muted-foreground">Carregando...</div>;
@@ -374,7 +357,7 @@ const RoomDetail = () => {
 
           <Separator className="mb-6" />
           <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">{t("room.description")}</h2>
-          <p className="mb-6 leading-relaxed text-muted-foreground">{room.description}</p>
+          <p className="mb-6 leading-relaxed text-muted-foreground whitespace-pre-wrap">{translatedDescription}</p>
 
           <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">{t("room.amenities")}</h2>
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -406,7 +389,7 @@ const RoomDetail = () => {
           {!isAdmin && user && !hasCompletedStay && !hasReviewed && <p className="mb-6 text-sm text-muted-foreground italic">{t("room.mustStayFirst")}</p>}
 
           <div className="space-y-4">
-            {allReviews.map((review) => {
+            {allReviews.map((review, idx) => {
               const canDelete = review.isDb && (isAdmin || (user && review.userId === user.id));
               return (
                 <div key={review.id} className="rounded-xl border border-border bg-card p-4">
@@ -433,9 +416,7 @@ const RoomDetail = () => {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {language !== "pt" && reviewTranslations[`${review.id}-${language}`]
-                      ? reviewTranslations[`${review.id}-${language}`]
-                      : review.comment}
+                    {reviewComments[idx] || review.comment}
                   </p>
                 </div>
               );

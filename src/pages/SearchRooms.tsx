@@ -19,11 +19,13 @@ const SearchRooms = () => {
   const { formatPrice } = useCurrency();
   const [searchParams] = useSearchParams();
   const initialCity = searchParams.get("city") || "";
+  const initialName = searchParams.get("q") || "";
   const checkInParam = searchParams.get("checkIn") || "";
   const checkOutParam = searchParams.get("checkOut") || "";
   const guestsParam = searchParams.get("guests") || "";
 
   const [cityFilter, setCityFilter] = useState(initialCity);
+  const [nameFilter, setNameFilter] = useState(initialName);
   const [maxPrice, setMaxPrice] = useState(1000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("rating");
@@ -47,6 +49,7 @@ const SearchRooms = () => {
     const guestsFilter = guestsParam ? Number(guestsParam) : 0;
     let result = allRooms.filter((r) => {
       if (cityFilter && !r.city.toLowerCase().includes(cityFilter.toLowerCase())) return false;
+      if (nameFilter && !r.title.toLowerCase().includes(nameFilter.toLowerCase())) return false;
       if (r.price > maxPrice) return false;
       if (selectedAmenities.length > 0 && !selectedAmenities.every((a) => r.amenities.includes(a))) return false;
       if (guestsFilter > 0 && r.guests < guestsFilter) return false;
@@ -58,7 +61,7 @@ const SearchRooms = () => {
       return b.reviewCount - a.reviewCount;
     });
     return result;
-  }, [cityFilter, maxPrice, selectedAmenities, sortBy, guestsParam, allRooms]);
+  }, [cityFilter, nameFilter, maxPrice, selectedAmenities, sortBy, guestsParam, allRooms]);
 
   const sortOptions = [
     { value: "rating", label: t("search.bestRating") },
@@ -79,9 +82,15 @@ const SearchRooms = () => {
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input type="text" placeholder={t("search.byName") !== "search.byName" ? t("search.byName") : "Buscar pelo nome do quarto..."}
+            value={nameFilter} onChange={(e) => setNameFilter(e.target.value)}
+            className="w-full rounded-xl border border-input bg-card py-2.5 pl-9 pr-3 text-sm shadow-card outline-none transition-all focus:ring-2 focus:ring-ring hover:shadow-elevated" />
+        </div>
+        <div className="relative flex-1">
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input type="text" placeholder={t("search.filterCity")} value={cityFilter} onChange={(e) => setCityFilter(e.target.value)}
-            className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            className="w-full rounded-xl border border-input bg-card py-2.5 pl-9 pr-3 text-sm shadow-card outline-none transition-all focus:ring-2 focus:ring-ring hover:shadow-elevated" />
         </div>
 
         <div className="relative">
