@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Room } from "@/data/mockData";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 interface RoomCardProps {
   room: Room;
@@ -14,7 +15,8 @@ interface RoomCardProps {
 const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
-  const roomTitle = t(`room.name.${room.id}`) !== `room.name.${room.id}` ? t(`room.name.${room.id}`) : room.title;
+  const baseTitle = t(`room.name.${room.id}`) !== `room.name.${room.id}` ? t(`room.name.${room.id}`) : room.title;
+  const roomTitle = useAutoTranslate(baseTitle, "pt");
 
   return (
     <Link to={`/quarto/${room.id}`}
