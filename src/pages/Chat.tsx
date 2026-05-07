@@ -12,6 +12,7 @@ import {
   type Conversation, type Message,
   LANG_FLAG, LANG_LABEL, canSendMessages, displayText, translateText,
 } from "@/lib/chat";
+import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 interface PartnerProfile {
   user_id: string; full_name: string | null; avatar_url: string | null; account_type: string;
