@@ -3,7 +3,7 @@ export type Language = "pt" | "en" | "es";
 export const translations: Record<Language, Record<string, string>> = {
   pt: {
     "nav.home": "Início",
-    "nav.search": "Buscar Quartos",
+    "nav.search": "Buscar Reservas",
     "nav.explore": "Explorar",
     "nav.advertise": "Anunciar Quarto",
     "nav.about": "Sobre",
@@ -57,7 +57,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "cta.subtitle": "Cadastre seu hotel, pousada ou quarto e alcance milhares de viajantes. Comece a receber reservas em poucos minutos.",
     "cta.button": "Anunciar meu quarto",
 
-    "search.title": "Buscar Quartos",
+    "search.title": "Buscar Reservas",
     "search.found": "hospedagens encontradas",
     "search.filterCity": "Filtrar por cidade...",
     "search.bestRating": "Melhor avaliação",
@@ -288,7 +288,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   en: {
     "nav.home": "Home",
-    "nav.search": "Search Rooms",
+    "nav.search": "Search Reservations",
     "nav.explore": "Explore",
     "nav.advertise": "List Property",
     "nav.about": "About",
@@ -342,7 +342,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "cta.subtitle": "Register your hotel, inn or room and reach thousands of travelers. Start receiving bookings in minutes.",
     "cta.button": "List my property",
 
-    "search.title": "Search Rooms",
+    "search.title": "Search Reservations",
     "search.found": "listings found",
     "search.filterCity": "Filter by city...",
     "search.bestRating": "Best rating",
@@ -572,7 +572,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
   es: {
     "nav.home": "Inicio",
-    "nav.search": "Buscar Habitaciones",
+    "nav.search": "Buscar Reservas",
     "nav.explore": "Explorar",
     "nav.advertise": "Anunciar Propiedad",
     "nav.about": "Acerca de",
@@ -626,7 +626,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "cta.subtitle": "Registra tu hotel, posada o habitación y alcanza miles de viajeros. Comienza a recibir reservas en minutos.",
     "cta.button": "Anunciar mi propiedad",
 
-    "search.title": "Buscar Habitaciones",
+    "search.title": "Buscar Reservas",
     "search.found": "alojamientos encontrados",
     "search.filterCity": "Filtrar por ciudad...",
     "search.bestRating": "Mejor calificación",
