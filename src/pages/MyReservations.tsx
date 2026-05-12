@@ -79,6 +79,17 @@ const MyReservations = () => {
     return room.description || "";
   };
 
+  const TranslatedDesc = ({ room }: { room: RoomInfo | undefined }) => {
+    const pre = localizedDescription(room);
+    // If we already have pre-translated text (or PT), use it; otherwise auto-translate from PT base.
+    const base = room?.description || "";
+    const needsAuto = !pre && !!base && language !== "pt";
+    const auto = useAutoTranslate(needsAuto ? base : "", "pt");
+    const text = pre || auto || base;
+    if (!text) return null;
+    return <p className="text-xs text-muted-foreground line-clamp-2">{text}</p>;
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return reservations;
@@ -115,7 +126,6 @@ const MyReservations = () => {
         <div className="space-y-4">
           {filtered.map((res) => {
             const room = roomInfo[res.room_id];
-            const desc = localizedDescription(room);
             const nights = Math.max(1, Math.ceil((new Date(res.check_out).getTime() - new Date(res.check_in).getTime()) / (1000 * 60 * 60 * 24)));
             const status = statusMap[res.status] || statusMap.confirmed;
             return (
@@ -127,7 +137,7 @@ const MyReservations = () => {
                     <Badge variant={status.variant}>{status.label}</Badge>
                   </div>
                   {room && <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {room.city}, {room.state}</p>}
-                  {desc && <p className="text-xs text-muted-foreground line-clamp-2">{desc}</p>}
+                  <TranslatedDesc room={room} />
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1 tabular-nums"><CalendarDays className="h-3.5 w-3.5" />{new Date(res.check_in).toLocaleDateString()} → {new Date(res.check_out).toLocaleDateString()}</span>
                     <span className="flex items-center gap-1 tabular-nums"><Users className="h-3.5 w-3.5" /> {res.guests} {t("hero.guestsPlural")}</span>
