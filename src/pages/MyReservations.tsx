@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CalendarDays, MapPin, Users, AlertCircle, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 interface Reservation {
   id: string; room_id: string; room_title: string; check_in: string; check_out: string;
