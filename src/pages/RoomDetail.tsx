@@ -64,6 +64,7 @@ const RoomDetail = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
   const [reviewTranslations, setReviewTranslations] = useState<Record<string, string>>({});
   const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
@@ -152,11 +153,13 @@ const RoomDetail = () => {
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
       .then(async ({ data }) => {
         if (data) {
-          setDbReviews(data as DbReview[]);
           const reviews = data as DbReview[];
+          setDbReviews(reviews);
           if (reviews.length > 0) {
             const avg = reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length;
-            setRoom((prev) => prev ? { ...prev, rating: Math.round(avg * 10) / 10, reviewCount: reviews.length } : prev);
+            setReviewStats({ avg: Math.round(avg * 10) / 10, count: reviews.length });
+          } else {
+            setReviewStats({ avg: 0, count: 0 });
           }
           const userIds = [...new Set(reviews.map(r => r.user_id))];
           if (userIds.length > 0) {
@@ -290,7 +293,10 @@ const RoomDetail = () => {
       if (error.message.includes("duplicate") || error.message.includes("unique")) toast.error(t("room.alreadyReviewed"));
       else toast.error("Erro ao enviar avaliação");
     } else {
-      setDbReviews((prev) => [data as DbReview, ...prev]);
+      const next = [data as DbReview, ...dbReviews];
+      setDbReviews(next);
+      const avg = next.reduce((s, r) => s + Number(r.rating), 0) / next.length;
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: next.length });
       setComment("");
       toast.success(t("room.reviewSent"));
     }
@@ -299,7 +305,14 @@ const RoomDetail = () => {
   const handleDeleteReview = async (reviewId: string) => {
     const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
     if (error) { toast.error("Erro ao excluir avaliação"); return; }
-    setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+    const next = dbReviews.filter(r => r.id !== reviewId);
+    setDbReviews(next);
+    if (next.length > 0) {
+      const avg = next.reduce((s, r) => s + Number(r.rating), 0) / next.length;
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: next.length });
+    } else {
+      setReviewStats({ avg: 0, count: 0 });
+    }
     toast.success("Avaliação excluída");
   };
 
@@ -333,10 +346,10 @@ const RoomDetail = () => {
           </div>
           <h1 className="mb-2 font-heading text-2xl font-bold text-foreground sm:text-3xl">{roomTitle}</h1>
           <div className="mb-4 flex items-center gap-4 text-sm">
-            {room.reviewCount > 0 ? (
+            {reviewStats.count > 0 ? (
               <>
-                <span className="flex items-center gap-1 font-medium tabular-nums"><Star className="h-4 w-4 fill-accent text-accent" /> {room.rating.toFixed(1)}</span>
-                <span className="text-muted-foreground tabular-nums">({room.reviewCount} {t("search.reviews")})</span>
+                <span className="flex items-center gap-1 font-medium tabular-nums"><Star className="h-4 w-4 fill-accent text-accent" /> {reviewStats.avg.toFixed(1)}</span>
+                <span className="text-muted-foreground tabular-nums">({reviewStats.count} {t("search.reviews")})</span>
               </>
             ) : (
               <span className="text-muted-foreground italic">Sem avaliações</span>
