@@ -16,28 +16,27 @@ const LANG_NAMES: Record<string, string> = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const gracefulFallback = (warning?: string) => new Response(JSON.stringify({ translations: {}, warning }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
   try {
     const { text, source_lang, target_langs } = await req.json();
     if (!text || typeof text !== "string" || !text.trim()) {
-      return new Response(JSON.stringify({ translations: {} }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return gracefulFallback();
     }
     const targets: string[] = Array.isArray(target_langs)
       ? target_langs.filter((l: string) => l in LANG_NAMES && l !== source_lang)
       : [];
     if (targets.length === 0) {
-      return new Response(JSON.stringify({ translations: {} }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return gracefulFallback();
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("LOVABLE_API_KEY missing");
+      return gracefulFallback("ai_unavailable");
     }
 
     const sourceName = LANG_NAMES[source_lang] || "auto-detect";
@@ -95,19 +94,14 @@ Deno.serve(async (req) => {
     } catch (fetchErr) {
       clearTimeout(timeoutId);
       console.error("AI gateway fetch failed/timed out:", fetchErr);
-      return new Response(JSON.stringify({ translations: {} }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return gracefulFallback(fetchErr instanceof DOMException && fetchErr.name === "AbortError" ? "timeout" : "ai_unavailable");
     }
     clearTimeout(timeoutId);
 
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error:", resp.status, t);
-      // Degrade gracefully — return empty translations instead of erroring the client
-      return new Response(JSON.stringify({ translations: {}, warning: resp.status === 429 ? "rate_limited" : resp.status === 402 ? "payment_required" : "ai_error" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return gracefulFallback(resp.status === 429 ? "rate_limited" : resp.status === 402 ? "payment_required" : "ai_error");
     }
 
     const data = await resp.json();
@@ -124,9 +118,6 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("translate-text error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "unknown" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return gracefulFallback("translation_failed");
   }
 });
