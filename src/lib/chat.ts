@@ -50,8 +50,10 @@ export async function translateText(
 ): Promise<Record<string, string>> {
   if (!text.trim() || targetLangs.length === 0) return {};
   try {
+    const uniqueTargets = Array.from(new Set(targetLangs.filter((lang) => lang && lang !== sourceLang)));
+    if (uniqueTargets.length === 0) return {};
     const { data, error } = await supabase.functions.invoke("translate-text", {
-      body: { text, source_lang: sourceLang, target_langs: targetLangs },
+      body: { text, source_lang: sourceLang, target_langs: uniqueTargets },
     });
     if (error) {
       console.warn("translateText error:", error);
