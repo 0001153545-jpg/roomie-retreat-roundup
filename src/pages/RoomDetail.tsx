@@ -293,7 +293,10 @@ const RoomDetail = () => {
       if (error.message.includes("duplicate") || error.message.includes("unique")) toast.error(t("room.alreadyReviewed"));
       else toast.error("Erro ao enviar avaliação");
     } else {
-      setDbReviews((prev) => [data as DbReview, ...prev]);
+      const next = [data as DbReview, ...dbReviews];
+      setDbReviews(next);
+      const avg = next.reduce((s, r) => s + Number(r.rating), 0) / next.length;
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: next.length });
       setComment("");
       toast.success(t("room.reviewSent"));
     }
@@ -302,7 +305,14 @@ const RoomDetail = () => {
   const handleDeleteReview = async (reviewId: string) => {
     const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
     if (error) { toast.error("Erro ao excluir avaliação"); return; }
-    setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+    const next = dbReviews.filter(r => r.id !== reviewId);
+    setDbReviews(next);
+    if (next.length > 0) {
+      const avg = next.reduce((s, r) => s + Number(r.rating), 0) / next.length;
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: next.length });
+    } else {
+      setReviewStats({ avg: 0, count: 0 });
+    }
     toast.success("Avaliação excluída");
   };
 
