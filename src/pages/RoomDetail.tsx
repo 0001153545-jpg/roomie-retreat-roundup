@@ -153,11 +153,13 @@ const RoomDetail = () => {
     supabase.from("reviews").select("*").eq("room_id", id).order("created_at", { ascending: false })
       .then(async ({ data }) => {
         if (data) {
-          setDbReviews(data as DbReview[]);
           const reviews = data as DbReview[];
+          setDbReviews(reviews);
           if (reviews.length > 0) {
             const avg = reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length;
-            setRoom((prev) => prev ? { ...prev, rating: Math.round(avg * 10) / 10, reviewCount: reviews.length } : prev);
+            setReviewStats({ avg: Math.round(avg * 10) / 10, count: reviews.length });
+          } else {
+            setReviewStats({ avg: 0, count: 0 });
           }
           const userIds = [...new Set(reviews.map(r => r.user_id))];
           if (userIds.length > 0) {
