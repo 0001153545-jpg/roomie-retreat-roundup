@@ -64,6 +64,7 @@ const RoomDetail = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
   const [reviewTranslations, setReviewTranslations] = useState<Record<string, string>>({});
   const [hostProfile, setHostProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
