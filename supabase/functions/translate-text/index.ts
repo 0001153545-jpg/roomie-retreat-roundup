@@ -104,13 +104,10 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error:", resp.status, t);
-      if (resp.status === 429) {
-        return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "payment_required" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      return new Response(JSON.stringify({ error: "ai_error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Degrade gracefully — return empty translations instead of erroring the client
+      return new Response(JSON.stringify({ translations: {}, warning: resp.status === 429 ? "rate_limited" : resp.status === 402 ? "payment_required" : "ai_error" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await resp.json();
