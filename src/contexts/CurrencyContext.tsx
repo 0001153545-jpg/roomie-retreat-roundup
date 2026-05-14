@@ -13,7 +13,9 @@ interface CurrencyContextType {
 // Conversion rates from BRL base
 const rates: Record<Currency, number> = { BRL: 1, USD: 0.18, EUR: 0.17 };
 const symbols: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
-const localeFor: Record<Currency, string> = { BRL: "pt-BR", USD: "en-US", EUR: "es-ES" };
+// Always format numbers in en-US style ($317,141.67) regardless of currency,
+// per design decision to standardize across the app. Symbol still varies.
+const NUMBER_LOCALE = "en-US";
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
