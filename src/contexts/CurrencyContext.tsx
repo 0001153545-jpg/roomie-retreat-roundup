@@ -49,13 +49,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       return `${symbols[currency]} ${converted.toFixed(2)}`;
     }
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    } catch {
-      return `${symbols[currency]} ${converted.toFixed(2)}`;
-    }
+  }, [currency]);
   }, [currency]);
 
   return (
