@@ -120,13 +120,12 @@ const RoomDetail = () => {
         const { data: hostRows } = await supabase.rpc("get_public_profile", { target_user_id: l.user_id });
         const hostData = hostRows && hostRows.length > 0 ? hostRows[0] : null;
         if (hostData) setHostProfile(hostData);
-        const localizedDesc = language === "en" ? (l.description_en || l.description || "")
-          : language === "es" ? (l.description_es || l.description || "")
-          : (l.description || "");
+        // Always keep the original PT description; auto-translate via Lovable AI below
+        // so the full multi-line text is translated (not just the cached column).
         setRoom({
           id: l.id,
           title: l.title,
-          description: localizedDesc,
+          description: l.description || "",
           city: l.city,
           state: l.state,
           price: l.discount_percent > 0 ? Number(l.price) * (1 - l.discount_percent / 100) : Number(l.price),
