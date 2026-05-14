@@ -35,11 +35,12 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminRooms from "@/pages/admin/AdminRooms";
 import AdminFinancial from "@/pages/admin/AdminFinancial";
 import AdminResilience from "@/pages/admin/AdminResilience";
+import AdminPermissions from "@/pages/admin/AdminPermissions";
 
 const queryClient = new QueryClient();
 
-const AdminWrapper = ({ children }: { children: React.ReactNode }) => (
-  <AdminGuard>
+const AdminWrapper = ({ children, requireModule }: { children: React.ReactNode; requireModule?: any }) => (
+  <AdminGuard requireModule={requireModule}>
     <AdminLayout>{children}</AdminLayout>
   </AdminGuard>
 );
@@ -57,10 +58,11 @@ const App = () => (
                 <Routes>
                   {/* Admin routes - no Header/Footer */}
                   <Route path="/admin" element={<AdminWrapper><AdminDashboard /></AdminWrapper>} />
-                  <Route path="/admin/usuarios" element={<AdminWrapper><AdminUsers /></AdminWrapper>} />
-                  <Route path="/admin/quartos" element={<AdminWrapper><AdminRooms /></AdminWrapper>} />
-                  <Route path="/admin/financeiro" element={<AdminWrapper><AdminFinancial /></AdminWrapper>} />
-                  <Route path="/admin/resiliencia" element={<AdminWrapper><AdminResilience /></AdminWrapper>} />
+                  <Route path="/admin/usuarios" element={<AdminWrapper requireModule="users"><AdminUsers /></AdminWrapper>} />
+                  <Route path="/admin/quartos" element={<AdminWrapper requireModule="rooms"><AdminRooms /></AdminWrapper>} />
+                  <Route path="/admin/financeiro" element={<AdminWrapper requireModule="financial"><AdminFinancial /></AdminWrapper>} />
+                  <Route path="/admin/resiliencia" element={<AdminWrapper requireModule="resilience"><AdminResilience /></AdminWrapper>} />
+                  <Route path="/admin/permissoes" element={<AdminWrapper requireModule="permissions"><AdminPermissions /></AdminWrapper>} />
 
                   {/* Public routes */}
                   <Route path="*" element={

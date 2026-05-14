@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       `Return STRICT JSON with the schema {"translations": { "<code>": "<translated text>" }} for codes: ${targets.join(",")}.`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     let resp: Response;
     try {

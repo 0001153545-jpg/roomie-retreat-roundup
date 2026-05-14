@@ -186,4 +186,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   font-feature-settings: "tnum";
+  font-weight: 700;
 }
+.money.line-through { font-weight: 500; }

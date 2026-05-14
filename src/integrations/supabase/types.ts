@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          created_at: string
+          email: string
+          perms: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          perms?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          perms?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -356,7 +380,9 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_admin_perm: { Args: { _module: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_any_admin: { Args: never; Returns: boolean }
       refresh_conversation_checkout: {
         Args: { conv_id: string }
         Returns: undefined
