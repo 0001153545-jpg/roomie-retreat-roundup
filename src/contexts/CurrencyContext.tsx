@@ -50,7 +50,6 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
       return `${symbols[currency]} ${converted.toFixed(2)}`;
     }
   }, [currency]);
-  }, [currency]);
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, symbol: symbols[currency], rate: rates[currency] }}>
