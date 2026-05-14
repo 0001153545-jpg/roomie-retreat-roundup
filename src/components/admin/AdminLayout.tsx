@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, Users, Building2, DollarSign, LogOut, Home, ShieldAlert, ShieldCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useAdminPermissions, AdminModule } from "@/hooks/useAdminPermissions";
 import {
   SidebarProvider,
   Sidebar,
@@ -19,12 +20,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: any;
+  module?: AdminModule;
+}
+
+const menuItems: MenuItem[] = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Usuários", url: "/admin/usuarios", icon: Users },
-  { title: "Quartos", url: "/admin/quartos", icon: Building2 },
-  { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign },
-  { title: "Resiliência", url: "/admin/resiliencia", icon: ShieldAlert },
+  { title: "Usuários", url: "/admin/usuarios", icon: Users, module: "users" },
+  { title: "Quartos", url: "/admin/quartos", icon: Building2, module: "rooms" },
+  { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, module: "financial" },
+  { title: "Resiliência", url: "/admin/resiliencia", icon: ShieldAlert, module: "resilience" },
+  { title: "Permissões", url: "/admin/permissoes", icon: ShieldCheck, module: "permissions" },
 ];
 
 function AdminSidebar() {
@@ -33,6 +42,9 @@ function AdminSidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { isSuper, perms } = useAdminPermissions();
+
+  const visibleItems = menuItems.filter((item) => !item.module || isSuper || perms[item.module]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -43,7 +55,7 @@ function AdminSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild
