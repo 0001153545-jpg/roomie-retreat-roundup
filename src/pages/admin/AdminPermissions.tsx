@@ -220,6 +220,24 @@ const AdminPermissions = () => {
         Observação: o módulo "Gerenciar Permissões" só pode ser usado pelo Super Administrador (e-mail principal do sistema).
         Administradores comuns não podem alterar suas próprias permissões nem as de outros.
       </p>
+
+      <AlertDialog open={!!toRemove} onOpenChange={(open) => !open && setToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover administrador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <span className="font-semibold text-foreground">{toRemove?.email}</span> como administrador?
+              Esta ação revoga todas as permissões concedidas e pode ser desfeita adicionando-o novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
