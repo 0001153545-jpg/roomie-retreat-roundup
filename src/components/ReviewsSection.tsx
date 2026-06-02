@@ -21,15 +21,18 @@ const ReviewsSection = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data: raw } = await supabase
         .from("reviews")
         .select("id, user_id, user_name, rating, comment, room_id")
+        .gte("rating", 4)
         .order("created_at", { ascending: false })
         .limit(8);
 
+      const data = raw;
+
       if (!data || data.length === 0) {
         // Fallback to mock if DB empty
-        setReviews(fallbackReviews.slice(0, 4).map((r) => ({
+        setReviews(fallbackReviews.filter((r) => r.rating >= 4).slice(0, 4).map((r) => ({
           id: r.id, userName: r.userName, userAvatar: r.userAvatar, avatarUrl: null, roomTitle: r.roomTitle, rating: r.rating, comment: r.comment,
         })));
         return;
