@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Targets: ${targetList}\nText:\n${text}` },
+          { role: "user", content: `Targets: ${targetList}\nText:\n${safeText}` },
         ],
         tools: [
           {
