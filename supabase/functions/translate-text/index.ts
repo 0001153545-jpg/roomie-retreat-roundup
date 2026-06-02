@@ -13,6 +13,27 @@ const LANG_NAMES: Record<string, string> = {
   es: "Spanish",
 };
 
+const AI_TIMEOUT_MS = 18_000;
+const MAX_TEXT_CHARS = 4_000;
+
+const withTimeout = async (promise: Promise<Response>, controller: AbortController): Promise<Response> => {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<Response>((resolve) => {
+    timeoutId = setTimeout(() => {
+      controller.abort();
+      resolve(new Response(JSON.stringify({ translations: {}, warning: "timeout" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }));
+    }, AI_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -49,56 +70,54 @@ Deno.serve(async (req) => {
       `Return STRICT JSON with the schema {"translations": { "<code>": "<translated text>" }} for codes: ${targets.join(",")}.`;
 
     // Cap text length to avoid extremely long generations that hit the platform 150s idle timeout.
-    const safeText = text.length > 6000 ? text.slice(0, 6000) : text;
+    const safeText = text.length > MAX_TEXT_CHARS ? text.slice(0, MAX_TEXT_CHARS) : text;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     let resp: Response;
     try {
-      resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Targets: ${targetList}\nText:\n${safeText}` },
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "return_translations",
-              description: "Return translations as a map of language code to translated text.",
-              parameters: {
-                type: "object",
-                properties: {
-                  translations: {
-                    type: "object",
-                    properties: Object.fromEntries(targets.map((t) => [t, { type: "string" }])),
-                    required: targets,
-                    additionalProperties: false,
+      resp = await withTimeout(fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Lovable-API-Key": LOVABLE_API_KEY,
+          "X-Lovable-AIG-SDK": "edge-fetch",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Targets: ${targetList}\nText:\n${safeText}` },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "return_translations",
+                description: "Return translations as a map of language code to translated text.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    translations: {
+                      type: "object",
+                      properties: Object.fromEntries(targets.map((t) => [t, { type: "string" }])),
+                      required: targets,
+                      additionalProperties: false,
+                    },
                   },
+                  required: ["translations"],
+                  additionalProperties: false,
                 },
-                required: ["translations"],
-                additionalProperties: false,
               },
             },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "return_translations" } },
-      }),
-      });
+          ],
+          tool_choice: { type: "function", function: { name: "return_translations" } },
+        }),
+      }), controller);
     } catch (fetchErr) {
-      clearTimeout(timeoutId);
       console.error("AI gateway fetch failed/timed out:", fetchErr);
       return gracefulFallback(fetchErr instanceof DOMException && fetchErr.name === "AbortError" ? "timeout" : "ai_unavailable");
     }
-    clearTimeout(timeoutId);
 
     if (!resp.ok) {
       const t = await resp.text();
