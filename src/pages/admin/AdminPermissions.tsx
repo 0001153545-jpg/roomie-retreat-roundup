@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ShieldCheck, Search, UserPlus, Trash2 } from "lucide-react";
 
@@ -32,6 +42,7 @@ const AdminPermissions = () => {
   const [search, setSearch] = useState("");
   const [searchProfiles, setSearchProfiles] = useState<ProfileRow[]>([]);
   const [searching, setSearching] = useState(false);
+  const [toRemove, setToRemove] = useState<AdminRow | null>(null);
 
   const loadAdmins = async () => {
     setLoading(true);
@@ -72,8 +83,10 @@ const AdminPermissions = () => {
     }
   };
 
-  const removeAdmin = async (admin: AdminRow) => {
-    if (!confirm(`Remover ${admin.email} como administrador?`)) return;
+  const confirmRemove = async () => {
+    if (!toRemove) return;
+    const admin = toRemove;
+    setToRemove(null);
     const { error } = await supabase.from("admin_permissions" as any).delete().eq("user_id", admin.user_id);
     if (error) toast.error("Erro: " + error.message);
     else { toast.success("Administrador removido"); loadAdmins(); }
@@ -181,7 +194,7 @@ const AdminPermissions = () => {
                       <p className="font-medium text-foreground">{prof?.full_name || admin.email}</p>
                       <p className="text-xs text-muted-foreground">{admin.email}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeAdmin(admin)} className="text-destructive hover:text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => setToRemove(admin)} className="text-destructive hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -207,6 +220,24 @@ const AdminPermissions = () => {
         Observação: o módulo "Gerenciar Permissões" só pode ser usado pelo Super Administrador (e-mail principal do sistema).
         Administradores comuns não podem alterar suas próprias permissões nem as de outros.
       </p>
+
+      <AlertDialog open={!!toRemove} onOpenChange={(open) => !open && setToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover administrador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <span className="font-semibold text-foreground">{toRemove?.email}</span> como administrador?
+              Esta ação revoga todas as permissões concedidas e pode ser desfeita adicionando-o novamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

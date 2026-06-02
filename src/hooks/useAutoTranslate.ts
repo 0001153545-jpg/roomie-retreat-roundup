@@ -26,7 +26,8 @@ export function useAutoTranslate(text: string | null | undefined, sourceLang: st
     const k = key(original, language);
     const cached = cache.get(k);
     if (cached) { setOut(cached); return; }
-    setOut(original);
+    // Keep previous translated text visible while fetching the new language
+    // to avoid a flash of the original PT text on language switch.
     let cancelled = false;
     const existing = inflight.get(k);
     const p = existing || translateText(original, sourceLang, [language]).then((res) => {
