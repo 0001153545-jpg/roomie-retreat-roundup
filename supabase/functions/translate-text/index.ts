@@ -48,8 +48,10 @@ Deno.serve(async (req) => {
       `Keep tone, emojis, links, names. Do NOT add explanations. ` +
       `Return STRICT JSON with the schema {"translations": { "<code>": "<translated text>" }} for codes: ${targets.join(",")}.`;
 
+    // Cap text length to avoid extremely long generations that hit the platform 150s idle timeout.
+    const safeText = text.length > 6000 ? text.slice(0, 6000) : text;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     let resp: Response;
     try {
@@ -64,7 +66,7 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Targets: ${targetList}\nText:\n${text}` },
+          { role: "user", content: `Targets: ${targetList}\nText:\n${safeText}` },
         ],
         tools: [
           {
