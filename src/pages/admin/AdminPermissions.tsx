@@ -42,6 +42,7 @@ const AdminPermissions = () => {
   const [search, setSearch] = useState("");
   const [searchProfiles, setSearchProfiles] = useState<ProfileRow[]>([]);
   const [searching, setSearching] = useState(false);
+  const [toRemove, setToRemove] = useState<AdminRow | null>(null);
 
   const loadAdmins = async () => {
     setLoading(true);
