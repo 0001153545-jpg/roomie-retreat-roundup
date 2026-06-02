@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
     const systemPrompt =
       `You translate user text. Source language: ${sourceName}. ` +
       `Translate the EXACT meaning to each requested target language. ` +
-      `Keep tone, emojis, links, names. Do NOT add explanations. ` +
-      `Return STRICT JSON with the schema {"translations": { "<code>": "<translated text>" }} for codes: ${targets.join(",")}.`;
+      `Keep tone, emojis, links, names and line breaks. Do NOT add explanations. ` +
+      `Return only minified JSON with the schema {"translations":{"<code>":"<translated text>"}} for codes: ${targets.join(",")}.`;
 
     // Cap text length to avoid extremely long generations that hit the platform 150s idle timeout.
     const safeText = text.length > MAX_TEXT_CHARS ? text.slice(0, MAX_TEXT_CHARS) : text;
@@ -89,29 +89,9 @@ Deno.serve(async (req) => {
             { role: "system", content: systemPrompt },
             { role: "user", content: `Targets: ${targetList}\nText:\n${safeText}` },
           ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "return_translations",
-                description: "Return translations as a map of language code to translated text.",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    translations: {
-                      type: "object",
-                      properties: Object.fromEntries(targets.map((t) => [t, { type: "string" }])),
-                      required: targets,
-                      additionalProperties: false,
-                    },
-                  },
-                  required: ["translations"],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: { type: "function", function: { name: "return_translations" } },
+          temperature: 0,
+          max_tokens: Math.min(1800, Math.max(256, Math.ceil(safeText.length * 0.8))),
+          response_format: { type: "json_object" },
         }),
       }), controller);
     } catch (fetchErr) {
@@ -126,11 +106,11 @@ Deno.serve(async (req) => {
     }
 
     const data = await resp.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const content = data.choices?.[0]?.message?.content;
     let translations: Record<string, string> = {};
-    if (toolCall?.function?.arguments) {
+    if (content) {
       try {
-        const parsed = JSON.parse(toolCall.function.arguments);
+        const parsed = JSON.parse(content);
         translations = parsed.translations || {};
       } catch (_) {/* ignore */}
     }
