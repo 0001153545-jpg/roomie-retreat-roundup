@@ -83,8 +83,10 @@ const AdminPermissions = () => {
     }
   };
 
-  const removeAdmin = async (admin: AdminRow) => {
-    if (!confirm(`Remover ${admin.email} como administrador?`)) return;
+  const confirmRemove = async () => {
+    if (!toRemove) return;
+    const admin = toRemove;
+    setToRemove(null);
     const { error } = await supabase.from("admin_permissions" as any).delete().eq("user_id", admin.user_id);
     if (error) toast.error("Erro: " + error.message);
     else { toast.success("Administrador removido"); loadAdmins(); }
