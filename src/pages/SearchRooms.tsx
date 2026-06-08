@@ -112,7 +112,7 @@ const SearchRooms = () => {
         <div className="mb-6 rounded-xl border border-border bg-card p-5 shadow-card">
           <div className="mb-4">
             <label className="mb-2 block text-sm font-medium text-foreground">{t("search.maxPrice")}: {formatPrice(maxPrice)}</label>
-            <input type="range" min={50} max={1000} step={10} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))}
+            <input type="range" min={50} max={10000} step={50} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="styled-range w-full" />
           </div>
           <div>
