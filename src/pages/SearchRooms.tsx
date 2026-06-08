@@ -26,7 +26,7 @@ const SearchRooms = () => {
 
   const [cityFilter, setCityFilter] = useState(initialCity);
   const [nameFilter, setNameFilter] = useState(initialName);
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("rating");
   const [showFilters, setShowFilters] = useState(false);
