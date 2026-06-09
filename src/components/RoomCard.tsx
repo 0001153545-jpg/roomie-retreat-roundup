@@ -3,7 +3,7 @@ import { Star, MapPin, Heart, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Room } from "@/data/mockData";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import PriceDisplay from "@/components/PriceDisplay";
 import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 interface RoomCardProps {
@@ -14,7 +14,7 @@ interface RoomCardProps {
 
 const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
   const { t } = useLanguage();
-  const { formatPrice } = useCurrency();
+  
   const baseTitle = t(`room.name.${room.id}`) !== `room.name.${room.id}` ? t(`room.name.${room.id}`) : room.title;
   const roomTitle = useAutoTranslate(baseTitle, "pt");
 
@@ -48,8 +48,8 @@ const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{room.guests}</span>
         </div>
         <div className="mt-3 flex items-baseline flex-wrap gap-2">
-          {room.originalPrice && <span className="text-sm text-muted-foreground line-through money tabular-nums">{formatPrice(room.originalPrice)}</span>}
-          <span className="font-heading text-lg font-bold text-foreground money tabular-nums">{formatPrice(room.price)}</span>
+          {room.originalPrice && <PriceDisplay value={room.originalPrice} size="sm" strikethrough />}
+          <PriceDisplay value={room.price} size="lg" />
           {room.originalPrice && (
             <Badge className="bg-primary text-primary-foreground border-0 text-xs">{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF</Badge>
           )}

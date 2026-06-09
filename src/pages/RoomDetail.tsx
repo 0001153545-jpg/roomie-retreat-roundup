@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import PriceDisplay from "@/components/PriceDisplay";
 import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -447,8 +448,8 @@ const RoomDetail = () => {
             ) : (
             <>
             <div className="mb-4 flex items-baseline gap-2 flex-wrap">
-              {room.originalPrice && <span className="money text-sm text-muted-foreground line-through tabular-nums">{formatPrice(room.originalPrice)}</span>}
-              <span className="money font-heading text-2xl font-bold text-foreground tabular-nums">{formatPrice(room.price)}</span>
+              {room.originalPrice && <PriceDisplay value={room.originalPrice} size="sm" strikethrough />}
+              <PriceDisplay value={room.price} size="2xl" />
               {room.originalPrice && (
                 <Badge className="bg-primary text-primary-foreground border-0 text-xs">{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF</Badge>
               )}
@@ -554,10 +555,10 @@ const RoomDetail = () => {
 
             {checkInDate && checkOutDate && (
               <div className="mb-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground money tabular-nums">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="money text-foreground tabular-nums">{formatPrice(subtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="money text-foreground tabular-nums">{formatPrice(fee)}</span></div>
+                <div className="flex justify-between items-baseline"><span className="text-muted-foreground inline-flex items-baseline gap-1"><PriceDisplay value={room.price} size="sm" weight="medium" /> x {nights} {t("room.nights")}</span><PriceDisplay value={subtotal} size="sm" weight="medium" /></div>
+                <div className="flex justify-between items-baseline"><span className="text-muted-foreground">{t("room.platformFee")}</span><PriceDisplay value={fee} size="sm" weight="medium" /></div>
                 <Separator />
-                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="money text-foreground tabular-nums">{formatPrice(total)}</span></div>
+                <div className="flex justify-between items-baseline font-semibold"><span className="text-foreground">{t("room.total")}</span><PriceDisplay value={total} size="sm" /></div>
               </div>
             )}
 
