@@ -14,7 +14,7 @@ interface RoomCardProps {
 
 const RoomCard = ({ room, isFavorite, onToggleFavorite }: RoomCardProps) => {
   const { t } = useLanguage();
-  const { formatPrice } = useCurrency();
+  
   const baseTitle = t(`room.name.${room.id}`) !== `room.name.${room.id}` ? t(`room.name.${room.id}`) : room.title;
   const roomTitle = useAutoTranslate(baseTitle, "pt");
 
