@@ -13,8 +13,8 @@ interface CurrencyContextType {
 // Conversion rates from BRL base
 const rates: Record<Currency, number> = { BRL: 1, USD: 0.18, EUR: 0.17 };
 const symbols: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
-// Locale per currency: BRL uses pt-BR (R$ 2.222,45), USD en-US ($2,222.45), EUR de-DE (2.222,45 €).
-const locales: Record<Currency, string> = { BRL: "pt-BR", USD: "en-US", EUR: "de-DE" };
+// Unified number format across the site: en-US (e.g. R$9,043.00, $9,043.00, €9,043.00).
+const NUMBER_LOCALE = "en-US";
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
@@ -39,12 +39,12 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     const safe = typeof price === "number" && isFinite(price) ? price : 0;
     const converted = safe * rates[currency];
     try {
-      // Format using en-US to always get $317,141.67 style; manually prefix the currency symbol.
-      const formatted = converted.toLocaleString(locales[currency], {
+      // Always en-US style so prices are consistent across the site (R$9,043.00).
+      const formatted = converted.toLocaleString(NUMBER_LOCALE, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      return `${symbols[currency]} ${formatted}`;
+      return `${symbols[currency]}${formatted}`;
     } catch {
       return `${symbols[currency]} ${converted.toFixed(2)}`;
     }
