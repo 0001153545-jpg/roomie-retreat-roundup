@@ -13,8 +13,8 @@ interface CurrencyContextType {
 // Conversion rates from BRL base
 const rates: Record<Currency, number> = { BRL: 1, USD: 0.18, EUR: 0.17 };
 const symbols: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
-// Locale per currency: BRL uses pt-BR (R$ 2.222,45), USD en-US ($2,222.45), EUR de-DE (2.222,45 €).
-const locales: Record<Currency, string> = { BRL: "pt-BR", USD: "en-US", EUR: "de-DE" };
+// Unified number format across the site: en-US (e.g. R$9,043.00, $9,043.00, €9,043.00).
+const NUMBER_LOCALE = "en-US";
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
