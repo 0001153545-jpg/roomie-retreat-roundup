@@ -447,8 +447,8 @@ const RoomDetail = () => {
             ) : (
             <>
             <div className="mb-4 flex items-baseline gap-2 flex-wrap">
-              {room.originalPrice && <span className="money text-sm text-muted-foreground line-through tabular-nums">{formatPrice(room.originalPrice)}</span>}
-              <span className="money font-heading text-2xl font-bold text-foreground tabular-nums">{formatPrice(room.price)}</span>
+              {room.originalPrice && <PriceDisplay value={room.originalPrice} size="sm" strikethrough />}
+              <PriceDisplay value={room.price} size="2xl" />
               {room.originalPrice && (
                 <Badge className="bg-primary text-primary-foreground border-0 text-xs">{Math.round((1 - room.price / room.originalPrice) * 100)}% OFF</Badge>
               )}
