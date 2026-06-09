@@ -3,7 +3,7 @@ import { Star, MapPin, Heart, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Room } from "@/data/mockData";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import PriceDisplay from "@/components/PriceDisplay";
 import { useAutoTranslate } from "@/hooks/useAutoTranslate";
 
 interface RoomCardProps {
