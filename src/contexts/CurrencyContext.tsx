@@ -40,11 +40,11 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     const converted = safe * rates[currency];
     try {
       // Format using en-US to always get $317,141.67 style; manually prefix the currency symbol.
-      const formatted = converted.toLocaleString(NUMBER_LOCALE, {
+      const formatted = converted.toLocaleString(locales[currency], {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      return `${symbols[currency]}${formatted}`;
+      return `${symbols[currency]} ${formatted}`;
     } catch {
       return `${symbols[currency]} ${converted.toFixed(2)}`;
     }
