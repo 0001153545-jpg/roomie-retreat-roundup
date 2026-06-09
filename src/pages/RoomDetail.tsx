@@ -555,10 +555,10 @@ const RoomDetail = () => {
 
             {checkInDate && checkOutDate && (
               <div className="mb-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground money tabular-nums">{formatPrice(room.price)} x {nights} {t("room.nights")}</span><span className="money text-foreground tabular-nums">{formatPrice(subtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t("room.platformFee")}</span><span className="money text-foreground tabular-nums">{formatPrice(fee)}</span></div>
+                <div className="flex justify-between items-baseline"><span className="text-muted-foreground inline-flex items-baseline gap-1"><PriceDisplay value={room.price} size="sm" weight="medium" /> x {nights} {t("room.nights")}</span><PriceDisplay value={subtotal} size="sm" weight="medium" /></div>
+                <div className="flex justify-between items-baseline"><span className="text-muted-foreground">{t("room.platformFee")}</span><PriceDisplay value={fee} size="sm" weight="medium" /></div>
                 <Separator />
-                <div className="flex justify-between font-semibold"><span className="text-foreground">{t("room.total")}</span><span className="money text-foreground tabular-nums">{formatPrice(total)}</span></div>
+                <div className="flex justify-between items-baseline font-semibold"><span className="text-foreground">{t("room.total")}</span><PriceDisplay value={total} size="sm" /></div>
               </div>
             )}
 
