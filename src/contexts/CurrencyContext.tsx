@@ -13,9 +13,8 @@ interface CurrencyContextType {
 // Conversion rates from BRL base
 const rates: Record<Currency, number> = { BRL: 1, USD: 0.18, EUR: 0.17 };
 const symbols: Record<Currency, string> = { BRL: "R$", USD: "$", EUR: "€" };
-// Always format numbers in en-US style ($317,141.67) regardless of currency,
-// per design decision to standardize across the app. Symbol still varies.
-const NUMBER_LOCALE = "en-US";
+// Locale per currency: BRL uses pt-BR (R$ 2.222,45), USD en-US ($2,222.45), EUR de-DE (2.222,45 €).
+const locales: Record<Currency, string> = { BRL: "pt-BR", USD: "en-US", EUR: "de-DE" };
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
@@ -41,11 +40,11 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     const converted = safe * rates[currency];
     try {
       // Format using en-US to always get $317,141.67 style; manually prefix the currency symbol.
-      const formatted = converted.toLocaleString(NUMBER_LOCALE, {
+      const formatted = converted.toLocaleString(locales[currency], {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      return `${symbols[currency]}${formatted}`;
+      return `${symbols[currency]} ${formatted}`;
     } catch {
       return `${symbols[currency]} ${converted.toFixed(2)}`;
     }
