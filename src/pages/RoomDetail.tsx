@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import PriceDisplay from "@/components/PriceDisplay";
 import { format, addDays, addMonths, isBefore, startOfDay } from "date-fns";
 import { pt, es, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
