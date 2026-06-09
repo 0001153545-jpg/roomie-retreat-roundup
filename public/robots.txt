@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://roomie-retreat-roundup.lovable.app/sitemap.xml
