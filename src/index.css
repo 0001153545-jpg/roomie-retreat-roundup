@@ -181,11 +181,15 @@
   box-shadow: 0 2px 6px hsl(var(--primary) / 0.3);
 }
 
-/* Monetary values: tabular numbers + no wrap between symbol and value */
+/* Monetary values: tabular numbers + no wrap between symbol and value.
+   Force the body (sans) font everywhere so the currency symbol matches the digits
+   even when the parent applies a heading (serif) font. */
 .money {
+  font-family: var(--font-body) !important;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
   font-feature-settings: "tnum";
+  white-space: nowrap;
   font-weight: 700;
+  letter-spacing: 0;
 }
 .money.line-through { font-weight: 500; }
