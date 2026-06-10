@@ -190,9 +190,11 @@ const AdminPermissions = () => {
                       <p className="font-medium text-foreground">{prof?.full_name || admin.email}</p>
                       <p className="text-xs text-muted-foreground">{admin.email}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setToRemove(admin)} className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isSuper && (
+                      <Button variant="ghost" size="icon" onClick={() => setToRemove(admin)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {ADMIN_MODULES.filter((m) => m.key !== "permissions").map((m) => (
@@ -201,6 +203,7 @@ const AdminPermissions = () => {
                         <Switch
                           checked={!!admin.perms[m.key]}
                           onCheckedChange={(v) => togglePerm(admin, m.key, v)}
+                          disabled={!isSuper}
                         />
                       </label>
                     ))}
