@@ -93,14 +93,56 @@ const AdminFinancial = () => {
 
   // Filtered reservations
   const filtered = useMemo(() => {
+    const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+    const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+    const q = search.trim().toLowerCase();
     return reservations.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (typeFilter !== "all" && listingTypeMap[r.room_id] !== typeFilter) return false;
-      if (dateFrom && r.check_in < dateFrom) return false;
-      if (dateTo && r.check_out > dateTo) return false;
+      if (fromStr && r.check_in < fromStr) return false;
+      if (toStr && r.check_out > toStr) return false;
+      if (q) {
+        const guest = (profiles[r.user_id] || "").toLowerCase();
+        const owner = (listingOwners[r.room_id] || "").toLowerCase();
+        const room = (r.room_title || "").toLowerCase();
+        const resId = r.id.toLowerCase();
+        const matchGuest = guest.includes(q);
+        const matchOwner = owner.includes(q);
+        const matchReservation = resId.includes(q) || room.includes(q);
+        if (searchScope === "guest" && !matchGuest) return false;
+        if (searchScope === "owner" && !matchOwner) return false;
+        if (searchScope === "reservation" && !matchReservation) return false;
+        if (searchScope === "all" && !(matchGuest || matchOwner || matchReservation)) return false;
+      }
       return true;
     });
-  }, [reservations, statusFilter, typeFilter, dateFrom, dateTo, listingTypeMap]);
+  }, [reservations, statusFilter, typeFilter, dateFrom, dateTo, listingTypeMap, search, searchScope, profiles, listingOwners]);
+
+  const exportToExcel = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum dado para exportar");
+      return;
+    }
+    const rows = filtered.map((r) => ({
+      ID: r.id,
+      Hóspede: profiles[r.user_id] || "—",
+      Anunciante: listingOwners[r.room_id] || "—",
+      Quarto: r.room_title,
+      "Check-in": new Date(r.check_in).toLocaleDateString("pt-BR"),
+      "Check-out": new Date(r.check_out).toLocaleDateString("pt-BR"),
+      Valor: Number(r.total),
+      Comissão: Number(r.fee),
+      Status: r.status === "confirmed" ? "Pago" : r.status === "cancelled" ? "Cancelado" : "Pendente",
+      "Data Reserva": new Date(r.created_at).toLocaleDateString("pt-BR"),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+    const stamp = format(new Date(), "yyyy-MM-dd_HHmm");
+    XLSX.writeFile(wb, `financeiro_${stamp}.xlsx`);
+    toast.success(`${rows.length} registro(s) exportado(s)`);
+  };
+
 
   // Metrics
   const totalRevenue = useMemo(() => filtered.reduce((s, r) => s + Number(r.total), 0), [filtered]);
