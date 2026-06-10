@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
   { title: "Quartos", url: "/admin/quartos", icon: Building2, module: "rooms" },
   { title: "Financeiro", url: "/admin/financeiro", icon: DollarSign, module: "financial" },
   { title: "Resiliência", url: "/admin/resiliencia", icon: ShieldAlert, module: "resilience" },
-  { title: "Permissões", url: "/admin/permissoes", icon: ShieldCheck, module: "permissions" },
+  { title: "Permissões", url: "/admin/permissoes", icon: ShieldCheck, module: "add_admins" },
 ];
 
 function AdminSidebar() {

@@ -66,7 +66,7 @@ const AdminPermissions = () => {
     setLoading(false);
   };
 
-  useEffect(() => { if (isSuper) loadAdmins(); }, [isSuper]);
+  useEffect(() => { loadAdmins(); }, []);
 
   const togglePerm = async (admin: AdminRow, module: AdminModule, value: boolean) => {
     const nextPerms = { ...admin.perms, [module]: value };
@@ -125,14 +125,10 @@ const AdminPermissions = () => {
   };
 
   if (!isSuper) {
-    // Defensive: page is also gated by AdminGuard requireModule="permissions"
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold text-destructive mb-2">Acesso Negado</h1>
-        <p className="text-muted-foreground">Apenas o Super Administrador pode gerenciar permissões.</p>
-      </div>
-    );
+    // Non-super admins with the "add_admins" permission can add new admins,
+    // but only the Super Administrator can toggle module permissions.
   }
+
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -194,9 +190,11 @@ const AdminPermissions = () => {
                       <p className="font-medium text-foreground">{prof?.full_name || admin.email}</p>
                       <p className="text-xs text-muted-foreground">{admin.email}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setToRemove(admin)} className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isSuper && (
+                      <Button variant="ghost" size="icon" onClick={() => setToRemove(admin)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {ADMIN_MODULES.filter((m) => m.key !== "permissions").map((m) => (
@@ -205,6 +203,7 @@ const AdminPermissions = () => {
                         <Switch
                           checked={!!admin.perms[m.key]}
                           onCheckedChange={(v) => togglePerm(admin, m.key, v)}
+                          disabled={!isSuper}
                         />
                       </label>
                     ))}

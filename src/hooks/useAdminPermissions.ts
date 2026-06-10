@@ -3,13 +3,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 
-export type AdminModule = "users" | "rooms" | "financial" | "resilience" | "permissions";
+export type AdminModule = "users" | "rooms" | "financial" | "resilience" | "permissions" | "add_admins";
 
 export const ADMIN_MODULES: { key: AdminModule; label: string }[] = [
   { key: "users", label: "Gerenciar Usuários" },
   { key: "rooms", label: "Gerenciar Quartos" },
   { key: "financial", label: "Ver Relatórios Financeiros" },
   { key: "resilience", label: "Módulo de Resiliência" },
+  { key: "add_admins", label: "Adicionar Novos Administradores" },
   { key: "permissions", label: "Gerenciar Permissões (Super_Admin)" },
 ];
 

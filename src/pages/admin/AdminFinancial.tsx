@@ -6,14 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Receipt, BarChart3, CalendarIcon, XCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { DollarSign, Receipt, BarChart3, CalendarIcon, XCircle, Search, FileSpreadsheet, X } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from "recharts";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 interface Reservation {
   id: string;
@@ -42,8 +49,10 @@ const AdminFinancial = () => {
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [searchScope, setSearchScope] = useState<"all" | "guest" | "owner" | "reservation">("all");
 
   useEffect(() => {
     const load = async () => {
@@ -84,14 +93,56 @@ const AdminFinancial = () => {
 
   // Filtered reservations
   const filtered = useMemo(() => {
+    const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+    const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+    const q = search.trim().toLowerCase();
     return reservations.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (typeFilter !== "all" && listingTypeMap[r.room_id] !== typeFilter) return false;
-      if (dateFrom && r.check_in < dateFrom) return false;
-      if (dateTo && r.check_out > dateTo) return false;
+      if (fromStr && r.check_in < fromStr) return false;
+      if (toStr && r.check_out > toStr) return false;
+      if (q) {
+        const guest = (profiles[r.user_id] || "").toLowerCase();
+        const owner = (listingOwners[r.room_id] || "").toLowerCase();
+        const room = (r.room_title || "").toLowerCase();
+        const resId = r.id.toLowerCase();
+        const matchGuest = guest.includes(q);
+        const matchOwner = owner.includes(q);
+        const matchReservation = resId.includes(q) || room.includes(q);
+        if (searchScope === "guest" && !matchGuest) return false;
+        if (searchScope === "owner" && !matchOwner) return false;
+        if (searchScope === "reservation" && !matchReservation) return false;
+        if (searchScope === "all" && !(matchGuest || matchOwner || matchReservation)) return false;
+      }
       return true;
     });
-  }, [reservations, statusFilter, typeFilter, dateFrom, dateTo, listingTypeMap]);
+  }, [reservations, statusFilter, typeFilter, dateFrom, dateTo, listingTypeMap, search, searchScope, profiles, listingOwners]);
+
+  const exportToExcel = () => {
+    if (filtered.length === 0) {
+      toast.error("Nenhum dado para exportar");
+      return;
+    }
+    const rows = filtered.map((r) => ({
+      ID: r.id,
+      Hóspede: profiles[r.user_id] || "—",
+      Anunciante: listingOwners[r.room_id] || "—",
+      Quarto: r.room_title,
+      "Check-in": new Date(r.check_in).toLocaleDateString("pt-BR"),
+      "Check-out": new Date(r.check_out).toLocaleDateString("pt-BR"),
+      Valor: Number(r.total),
+      Comissão: Number(r.fee),
+      Status: r.status === "confirmed" ? "Pago" : r.status === "cancelled" ? "Cancelado" : "Pendente",
+      "Data Reserva": new Date(r.created_at).toLocaleDateString("pt-BR"),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+    const stamp = format(new Date(), "yyyy-MM-dd_HHmm");
+    XLSX.writeFile(wb, `financeiro_${stamp}.xlsx`);
+    toast.success(`${rows.length} registro(s) exportado(s)`);
+  };
+
 
   // Metrics
   const totalRevenue = useMemo(() => filtered.reduce((s, r) => s + Number(r.total), 0), [filtered]);
@@ -281,8 +332,51 @@ const AdminFinancial = () => {
 
       {/* Filters */}
       <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Filtros e Busca</CardTitle>
+          <Button onClick={exportToExcel} size="sm" className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Exportar Excel ({filtered.length})
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search row */}
+          <div className="grid gap-3 sm:grid-cols-[1fr_220px_auto]">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Buscar</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Nome do cliente, anunciante, ID da reserva ou quarto..."
+                  className="pl-9 pr-9"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Filtrar por</label>
+              <Select value={searchScope} onValueChange={(v) => setSearchScope(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os campos</SelectItem>
+                  <SelectItem value="guest">Cliente / Hóspede</SelectItem>
+                  <SelectItem value="owner">Proprietário / Anunciante</SelectItem>
+                  <SelectItem value="reservation">Reserva (ID/Quarto)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Status</label>
@@ -309,16 +403,77 @@ const AdminFinancial = () => {
               </Select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Data de</label>
-              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <label className="text-xs text-muted-foreground mb-1 block">Check-in a partir de</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "dd 'de' MMM yyyy", { locale: ptBR }) : "Selecionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    locale={ptBR}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                  {dateFrom && (
+                    <div className="p-2 border-t border-border">
+                      <Button variant="ghost" size="sm" onClick={() => setDateFrom(undefined)} className="w-full">
+                        Limpar
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Data até</label>
-              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <label className="text-xs text-muted-foreground mb-1 block">Check-out até</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "dd 'de' MMM yyyy", { locale: ptBR }) : "Selecionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    locale={ptBR}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                  {dateTo && (
+                    <div className="p-2 border-t border-border">
+                      <Button variant="ghost" size="sm" onClick={() => setDateTo(undefined)} className="w-full">
+                        Limpar
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
       </Card>
+
 
       {/* Transactions Table */}
       <div className="rounded-lg border bg-card shadow-sm">
