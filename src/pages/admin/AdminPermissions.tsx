@@ -66,7 +66,7 @@ const AdminPermissions = () => {
     setLoading(false);
   };
 
-  useEffect(() => { if (isSuper) loadAdmins(); }, [isSuper]);
+  useEffect(() => { loadAdmins(); }, []);
 
   const togglePerm = async (admin: AdminRow, module: AdminModule, value: boolean) => {
     const nextPerms = { ...admin.perms, [module]: value };
