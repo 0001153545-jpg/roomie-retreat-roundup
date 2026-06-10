@@ -125,14 +125,10 @@ const AdminPermissions = () => {
   };
 
   if (!isSuper) {
-    // Defensive: page is also gated by AdminGuard requireModule="permissions"
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold text-destructive mb-2">Acesso Negado</h1>
-        <p className="text-muted-foreground">Apenas o Super Administrador pode gerenciar permissões.</p>
-      </div>
-    );
+    // Non-super admins with the "add_admins" permission can add new admins,
+    // but only the Super Administrator can toggle module permissions.
   }
+
 
   return (
     <div className="space-y-6 max-w-5xl">
