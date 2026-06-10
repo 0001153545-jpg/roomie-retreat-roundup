@@ -49,8 +49,10 @@ const AdminFinancial = () => {
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [searchScope, setSearchScope] = useState<"all" | "guest" | "owner" | "reservation">("all");
 
   useEffect(() => {
     const load = async () => {
