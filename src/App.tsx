@@ -62,7 +62,7 @@ const App = () => (
                   <Route path="/admin/quartos" element={<AdminWrapper requireModule="rooms"><AdminRooms /></AdminWrapper>} />
                   <Route path="/admin/financeiro" element={<AdminWrapper requireModule="financial"><AdminFinancial /></AdminWrapper>} />
                   <Route path="/admin/resiliencia" element={<AdminWrapper requireModule="resilience"><AdminResilience /></AdminWrapper>} />
-                  <Route path="/admin/permissoes" element={<AdminWrapper requireModule="permissions"><AdminPermissions /></AdminWrapper>} />
+                  <Route path="/admin/permissoes" element={<AdminWrapper requireModule="add_admins"><AdminPermissions /></AdminWrapper>} />
 
                   {/* Public routes */}
                   <Route path="*" element={
