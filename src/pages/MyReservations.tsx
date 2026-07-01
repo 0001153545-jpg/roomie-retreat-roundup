@@ -63,7 +63,21 @@ const MyReservations = () => {
       });
   }, [user]);
 
+  const canCancel = (res: Reservation) => {
+    if (res.status !== "confirmed") return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkIn = new Date(res.check_in);
+    checkIn.setHours(0, 0, 0, 0);
+    return today < checkIn;
+  };
+
   const handleCancel = async (id: string) => {
+    const res = reservations.find((r) => r.id === id);
+    if (!res || !canCancel(res)) {
+      toast.error("Não é possível cancelar: a reserva já iniciou ou foi concluída.");
+      return;
+    }
     const { error } = await supabase.from("reservations").update({ status: "cancelled" }).eq("id", id);
     if (error) toast.error("Erro ao cancelar reserva");
     else {
