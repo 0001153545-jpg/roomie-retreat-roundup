@@ -162,7 +162,7 @@ const MyReservations = () => {
                   <span className="money font-heading text-lg font-bold leading-none text-foreground inline-flex h-9 items-center justify-end tabular-nums sm:w-full sm:text-right">
                     {formatPrice(Number(res.total))}
                   </span>
-                  {res.status === "confirmed" && (
+                  {canCancel(res) && (
                     <Button variant="outline" size="sm" className="h-9 sm:w-full" onClick={() => handleCancel(res.id)}>
                       {t("reservations.cancel")}
                     </Button>
