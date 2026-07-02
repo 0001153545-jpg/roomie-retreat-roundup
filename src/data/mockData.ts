@@ -27,6 +27,12 @@ export interface Room {
   hostId?: string;
   hostAvatar: string;
   featured?: boolean;
+  superHost?: boolean;
+  bedrooms?: number;
+  beds?: number;
+  bathrooms?: number;
+  category?: string;
+  demo?: boolean;
 }
 
 export interface Destination {
