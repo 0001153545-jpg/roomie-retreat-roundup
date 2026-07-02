@@ -193,3 +193,7 @@
   letter-spacing: 0;
 }
 .money.line-through { font-weight: 500; }
+
+/* Horizontal scroll without visible scrollbar */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
