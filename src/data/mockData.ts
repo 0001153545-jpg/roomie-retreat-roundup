@@ -27,7 +27,14 @@ export interface Room {
   hostId?: string;
   hostAvatar: string;
   featured?: boolean;
+  bedrooms?: number;
+  beds?: number;
+  bathrooms?: number;
+  category?: string;
+  superHost?: boolean;
+  demo?: boolean;
 }
+
 
 export interface Destination {
   id: string;
