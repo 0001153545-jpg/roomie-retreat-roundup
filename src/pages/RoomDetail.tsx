@@ -389,7 +389,7 @@ const RoomDetail = () => {
               <div className="mb-3 flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button key={star} onClick={() => setUserRating(star)}>
-                    <Star className={`h-5 w-5 ${star <= userRating ? "fill-accent text-accent" : "text-muted-foreground/30"}`} />
+                    <Star className={`h-5 w-5 transition-colors ${star <= userRating ? "fill-accent text-accent" : "fill-muted text-muted-foreground/60"}`} />
                   </button>
                 ))}
               </div>
