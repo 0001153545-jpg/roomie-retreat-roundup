@@ -345,15 +345,47 @@ const RoomDetail = () => {
       </Link>
 
       <div className="mb-6 grid grid-cols-1 gap-2 lg:grid-cols-3 lg:grid-rows-2">
-        <div className="lg:col-span-2 lg:row-span-2">
-          <img src={room.images[activeImage]} alt={roomTitle} className="h-64 w-full rounded-xl object-cover sm:h-80 lg:h-full" />
-        </div>
+        <button
+          type="button"
+          onClick={() => { setLightboxIdx(activeImage); setLightboxOpen(true); }}
+          className="lg:col-span-2 lg:row-span-2 overflow-hidden rounded-xl group relative"
+        >
+          <img src={room.images[activeImage]} alt={roomTitle} className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] sm:h-80 lg:h-full" />
+          <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+            Ver galeria ({room.images.length})
+          </span>
+        </button>
         {room.images.slice(1, 3).map((img, i) => (
-          <button key={i} onClick={() => setActiveImage(i + 1)} className="hidden overflow-hidden rounded-xl lg:block">
-            <img src={img} alt={`${roomTitle} ${i + 2}`} className="h-full w-full object-cover transition-transform hover:scale-105" />
+          <button
+            key={i}
+            onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}
+            className="hidden overflow-hidden rounded-xl lg:block group"
+          >
+            <img src={img} alt={`${roomTitle} ${i + 2}`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </button>
         ))}
       </div>
+
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-5xl border-0 bg-transparent p-0 shadow-none">
+          <div className="relative">
+            <img src={room.images[lightboxIdx]} alt={roomTitle} className="max-h-[80vh] w-full rounded-xl object-contain" />
+            {room.images.length > 1 && (
+              <>
+                <button onClick={() => setLightboxIdx((i) => (i - 1 + room.images.length) % room.images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80" aria-label="Anterior">
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button onClick={() => setLightboxIdx((i) => (i + 1) % room.images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80" aria-label="Próxima">
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                  {lightboxIdx + 1} / {room.images.length}
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
