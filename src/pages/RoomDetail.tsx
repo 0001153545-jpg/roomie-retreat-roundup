@@ -454,10 +454,10 @@ const RoomDetail = () => {
               title={`Mapa de ${room.city}`}
               className="w-full h-72 border-0"
               loading="lazy"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker=&search=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}&z=12&output=embed`}
             />
             <a
-              href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
               target="_blank" rel="noreferrer"
               className="block px-3 py-2 text-xs text-primary hover:underline"
             >
