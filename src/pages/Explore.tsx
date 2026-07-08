@@ -9,28 +9,25 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
-import { generateDemoRooms } from "@/lib/demoRooms";
 
 const FILTERS = ["Todos", "São Paulo", "Rio de Janeiro", "Gramado"];
 
 const Explore = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { t } = useLanguage();
-  const [realRooms, setRealRooms] = useState<Room[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("Todos");
 
-  const demoRooms = useMemo(() => generateDemoRooms(), []);
-
   useEffect(() => {
-    supabase.from("listings").select("*").then(async ({ data }) => {
-      if (data) setRealRooms(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
+    supabase.from("listings").select("*").order("created_at", { ascending: false }).then(async ({ data }) => {
+      if (data) setAllRooms(await enrichRoomsWithReviews(data.map(mapListingToRoom)));
       setLoading(false);
     });
   }, []);
 
-  const allRooms = useMemo(() => [...realRooms, ...demoRooms], [realRooms, demoRooms]);
   const filtered = filter === "Todos" ? allRooms : allRooms.filter((r) => r.city === filter);
+
 
   const destinationsWithCount = destinations.map((dest) => ({
     ...dest,
