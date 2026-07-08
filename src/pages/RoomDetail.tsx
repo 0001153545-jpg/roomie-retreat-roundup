@@ -430,6 +430,42 @@ const RoomDetail = () => {
           </div>
 
           <Separator className="mb-6" />
+          <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">Disponibilidade</h2>
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm bg-primary/20 border border-primary/40" /> Disponível</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm bg-muted line-through" /> Ocupado</span>
+            <span className="tabular-nums"><PriceDisplay value={room.price} size="sm" weight="medium" /> por diária</span>
+          </div>
+          <div className="mb-6 rounded-xl border border-border bg-card p-2 overflow-x-auto">
+            <Calendar
+              mode="single"
+              numberOfMonths={2}
+              disabled={(date) => isBefore(date, today) || date > maxDate || isDateBooked(date)}
+              locale={dateLocale}
+              className="p-2 pointer-events-auto"
+            />
+          </div>
+
+          <Separator className="mb-6" />
+          <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">Localização</h2>
+          <p className="mb-3 text-sm text-muted-foreground">{room.city}, {room.state}</p>
+          <div className="mb-6 overflow-hidden rounded-xl border border-border shadow-card">
+            <iframe
+              title={`Mapa de ${room.city}`}
+              className="w-full h-72 border-0"
+              loading="lazy"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker=&search=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
+            />
+            <a
+              href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
+              target="_blank" rel="noreferrer"
+              className="block px-3 py-2 text-xs text-primary hover:underline"
+            >
+              Ver mapa ampliado ↗
+            </a>
+          </div>
+
+          <Separator className="mb-6" />
           <h2 className="mb-4 font-heading text-lg font-semibold text-foreground">{t("room.reviewsTitle")} ({allReviews.length})</h2>
 
           {canComment && (
