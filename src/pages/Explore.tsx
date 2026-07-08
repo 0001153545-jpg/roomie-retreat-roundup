@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { destinations } from "@/data/mockData";
 import type { Room } from "@/data/mockData";
 import RoomCard from "@/components/RoomCard";
