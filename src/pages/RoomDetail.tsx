@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import type { Room } from "@/data/mockData";
-import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
+import { Star, MapPin, Users, Heart, Share2, ChevronLeft, ChevronRight, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,6 +80,21 @@ const RoomDetail = () => {
   const [guestOpen, setGuestOpen] = useState(false);
   const [bookedDates, setBookedDates] = useState<{ start: Date; end: Date }[]>([]);
   const [roomFullyBooked, setRoomFullyBooked] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (!room) return;
+      if (e.key === "ArrowRight") setLightboxIdx((i) => (i + 1) % room.images.length);
+      else if (e.key === "ArrowLeft") setLightboxIdx((i) => (i - 1 + room.images.length) % room.images.length);
+      else if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxOpen, room]);
+
 
   const today = startOfDay(new Date());
   const maxDate = addMonths(today, 6);
@@ -328,15 +345,47 @@ const RoomDetail = () => {
       </Link>
 
       <div className="mb-6 grid grid-cols-1 gap-2 lg:grid-cols-3 lg:grid-rows-2">
-        <div className="lg:col-span-2 lg:row-span-2">
-          <img src={room.images[activeImage]} alt={roomTitle} className="h-64 w-full rounded-xl object-cover sm:h-80 lg:h-full" />
-        </div>
+        <button
+          type="button"
+          onClick={() => { setLightboxIdx(activeImage); setLightboxOpen(true); }}
+          className="lg:col-span-2 lg:row-span-2 overflow-hidden rounded-xl group relative"
+        >
+          <img src={room.images[activeImage]} alt={roomTitle} className="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] sm:h-80 lg:h-full" />
+          <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+            Ver galeria ({room.images.length})
+          </span>
+        </button>
         {room.images.slice(1, 3).map((img, i) => (
-          <button key={i} onClick={() => setActiveImage(i + 1)} className="hidden overflow-hidden rounded-xl lg:block">
-            <img src={img} alt={`${roomTitle} ${i + 2}`} className="h-full w-full object-cover transition-transform hover:scale-105" />
+          <button
+            key={i}
+            onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}
+            className="hidden overflow-hidden rounded-xl lg:block group"
+          >
+            <img src={img} alt={`${roomTitle} ${i + 2}`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
           </button>
         ))}
       </div>
+
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-5xl border-0 bg-transparent p-0 shadow-none">
+          <div className="relative">
+            <img src={room.images[lightboxIdx]} alt={roomTitle} className="max-h-[80vh] w-full rounded-xl object-contain" />
+            {room.images.length > 1 && (
+              <>
+                <button onClick={() => setLightboxIdx((i) => (i - 1 + room.images.length) % room.images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80" aria-label="Anterior">
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button onClick={() => setLightboxIdx((i) => (i + 1) % room.images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black/80" aria-label="Próxima">
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                  {lightboxIdx + 1} / {room.images.length}
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -378,6 +427,42 @@ const RoomDetail = () => {
               const Icon = amenityIcons[a] || Check;
               return <div key={a} className="flex items-center gap-2 text-sm text-foreground"><Icon className="h-4 w-4 text-primary" />{translateAmenity(a)}</div>;
             })}
+          </div>
+
+          <Separator className="mb-6" />
+          <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">Disponibilidade</h2>
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm bg-primary/20 border border-primary/40" /> Disponível</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-sm bg-muted line-through" /> Ocupado</span>
+            <span className="tabular-nums"><PriceDisplay value={room.price} size="sm" weight="medium" /> por diária</span>
+          </div>
+          <div className="mb-6 rounded-xl border border-border bg-card p-2 overflow-x-auto">
+            <Calendar
+              mode="single"
+              numberOfMonths={2}
+              disabled={(date) => isBefore(date, today) || date > maxDate || isDateBooked(date)}
+              locale={dateLocale}
+              className="p-2 pointer-events-auto"
+            />
+          </div>
+
+          <Separator className="mb-6" />
+          <h2 className="mb-3 font-heading text-lg font-semibold text-foreground">Localização</h2>
+          <p className="mb-3 text-sm text-muted-foreground">{room.city}, {room.state}</p>
+          <div className="mb-6 overflow-hidden rounded-xl border border-border shadow-card">
+            <iframe
+              title={`Mapa de ${room.city}`}
+              className="w-full h-72 border-0"
+              loading="lazy"
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}&z=12&output=embed`}
+            />
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(room.city + ', ' + room.state + ', Brasil')}`}
+              target="_blank" rel="noreferrer"
+              className="block px-3 py-2 text-xs text-primary hover:underline"
+            >
+              Ver mapa ampliado ↗
+            </a>
           </div>
 
           <Separator className="mb-6" />
