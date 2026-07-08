@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import type { Room } from "@/data/mockData";
-import { Star, MapPin, Users, Heart, Share2, ChevronLeft, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
+import { Star, MapPin, Users, Heart, Share2, ChevronLeft, ChevronRight, Wifi, Wind, Car, Coffee, Waves, PawPrint, Check, CreditCard, Plus, X, CalendarDays, Trash2 } from "lucide-react";
 import { isAdminEmail } from "@/components/admin/AdminGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
