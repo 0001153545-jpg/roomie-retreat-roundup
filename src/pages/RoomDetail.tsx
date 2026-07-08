@@ -80,6 +80,21 @@ const RoomDetail = () => {
   const [guestOpen, setGuestOpen] = useState(false);
   const [bookedDates, setBookedDates] = useState<{ start: Date; end: Date }[]>([]);
   const [roomFullyBooked, setRoomFullyBooked] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (!room) return;
+      if (e.key === "ArrowRight") setLightboxIdx((i) => (i + 1) % room.images.length);
+      else if (e.key === "ArrowLeft") setLightboxIdx((i) => (i - 1 + room.images.length) % room.images.length);
+      else if (e.key === "Escape") setLightboxOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightboxOpen, room]);
+
 
   const today = startOfDay(new Date());
   const maxDate = addMonths(today, 6);
