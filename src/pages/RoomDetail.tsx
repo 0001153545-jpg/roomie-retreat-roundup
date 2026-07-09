@@ -65,7 +65,8 @@ const RoomDetail = () => {
   const [children, setChildren] = useState<number[]>([]);
   const [activeImage, setActiveImage] = useState(0);
   const [comment, setComment] = useState("");
-  const [userRating, setUserRating] = useState(5);
+  const [criteria, setCriteria] = useState({ cleanliness: 5, service: 5, location: 5, comfort: 5, value: 5 });
+  const userRating = Math.round(((criteria.cleanliness + criteria.service + criteria.location + criteria.comfort + criteria.value) / 5) * 10) / 10;
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
@@ -303,8 +304,10 @@ const RoomDetail = () => {
 
     const { data, error } = await supabase.from("reviews").insert({
       user_id: user.id, room_id: room.id, rating: userRating,
+      cleanliness: criteria.cleanliness, service: criteria.service, location: criteria.location,
+      comfort: criteria.comfort, value: criteria.value,
       comment: comment.trim(), user_name: user.user_metadata?.full_name || "User",
-    }).select().single();
+    } as any).select().single();
 
     if (error) {
       if (error.message.includes("duplicate") || error.message.includes("unique")) toast.error(t("room.alreadyReviewed"));
@@ -470,14 +473,28 @@ const RoomDetail = () => {
 
           {canComment && (
             <div className="mb-6 rounded-xl border border-border bg-card p-4">
-              <label className="mb-2 block text-sm font-medium text-foreground">{t("room.leaveReview")}</label>
-              <div className="mb-3 flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button key={star} onClick={() => setUserRating(star)}>
-                    <Star className={`h-5 w-5 transition-colors ${star <= userRating ? "fill-accent text-accent" : "fill-muted text-muted-foreground/60"}`} />
-                  </button>
+              <label className="mb-3 block text-sm font-medium text-foreground">{t("room.leaveReview")}</label>
+              <div className="mb-3 grid gap-2 sm:grid-cols-2">
+                {([
+                  ["cleanliness", "Limpeza"],
+                  ["service", "Atendimento"],
+                  ["location", "Localização"],
+                  ["comfort", "Conforto"],
+                  ["value", "Custo-benefício"],
+                ] as const).map(([key, label]) => (
+                  <div key={key} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
+                    <span className="text-xs text-muted-foreground">{label}</span>
+                    <div className="flex items-center gap-0.5">
+                      {[1,2,3,4,5].map((star) => (
+                        <button key={star} type="button" onClick={() => setCriteria((c) => ({ ...c, [key]: star }))}>
+                          <Star className={`h-4 w-4 transition-colors ${star <= (criteria as any)[key] ? "fill-accent text-accent" : "fill-muted text-muted-foreground/50"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
+              <div className="mb-3 text-xs text-muted-foreground">Nota média: <span className="font-semibold text-foreground">{userRating.toFixed(1)}</span></div>
               <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t("room.reviewPlaceholder")}
                 className="mb-3 w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" rows={3} />
               <Button onClick={handleComment} disabled={!comment.trim()}>{t("room.submitReview")}</Button>

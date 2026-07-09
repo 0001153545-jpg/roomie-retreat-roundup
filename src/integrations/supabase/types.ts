@@ -354,31 +354,46 @@ export type Database = {
       }
       reviews: {
         Row: {
+          cleanliness: number | null
+          comfort: number | null
           comment: string
           created_at: string
           id: string
+          location: number | null
           rating: number
           room_id: string
+          service: number | null
           user_id: string
           user_name: string
+          value: number | null
         }
         Insert: {
+          cleanliness?: number | null
+          comfort?: number | null
           comment: string
           created_at?: string
           id?: string
+          location?: number | null
           rating: number
           room_id: string
+          service?: number | null
           user_id: string
           user_name: string
+          value?: number | null
         }
         Update: {
+          cleanliness?: number | null
+          comfort?: number | null
           comment?: string
           created_at?: string
           id?: string
+          location?: number | null
           rating?: number
           room_id?: string
+          service?: number | null
           user_id?: string
           user_name?: string
+          value?: number | null
         }
         Relationships: []
       }
@@ -390,6 +405,16 @@ export type Database = {
       cascade_delete_user_data: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      get_host_stats: {
+        Args: { _host_id: string }
+        Returns: {
+          avg_rating: number
+          avg_response_minutes: number
+          listings_count: number
+          reviews_count: number
+          super_host: boolean
+        }[]
       }
       get_or_create_conversation: {
         Args: { target_host_id: string }
@@ -416,6 +441,7 @@ export type Database = {
       has_admin_perm: { Args: { _module: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_any_admin: { Args: never; Returns: boolean }
+      is_super_host: { Args: { _host_id: string }; Returns: boolean }
       refresh_conversation_checkout: {
         Args: { conv_id: string }
         Returns: undefined

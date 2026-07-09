@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock } from "lucide-react";
+import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock, Award } from "lucide-react";
 import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 import { getOrCreateConversation } from "@/lib/chat";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ const Host = () => {
   const { formatPrice } = useCurrency();
   const [profile, setProfile] = useState<HostProfile | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0 });
+  const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0, responseMin: 0, superHost: false });
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
 
@@ -60,14 +60,16 @@ const Host = () => {
       const mappedRooms = await enrichRoomsWithReviews((listingsData || []).map(mapListingToRoom));
       setRooms(mappedRooms);
 
-      // Aggregate reviews for this host's rooms
-      if (mappedRooms.length > 0) {
-        const roomIds = mappedRooms.map(r => r.id);
-        const { data: revs } = await supabase.from("reviews").select("rating").in("room_id", roomIds);
-        if (revs && revs.length > 0) {
-          const sum = revs.reduce((acc, r: any) => acc + (r.rating || 0), 0);
-          setStats({ avgRating: Number((sum / revs.length).toFixed(1)), totalReviews: revs.length });
-        }
+      // Fetch real host stats via RPC
+      const { data: statRows } = await (supabase.rpc as any)("get_host_stats", { _host_id: id });
+      const s = statRows && statRows.length > 0 ? statRows[0] : null;
+      if (s) {
+        setStats({
+          avgRating: Number(s.avg_rating) || 0,
+          totalReviews: Number(s.reviews_count) || 0,
+          responseMin: Number(s.avg_response_minutes) || 0,
+          superHost: Boolean(s.super_host),
+        });
       }
 
       setLoading(false);
@@ -118,6 +120,11 @@ const Host = () => {
                 <Badge className="gap-1 bg-primary/10 text-primary border-0 hover:bg-primary/15">
                   <BadgeCheck className="h-3.5 w-3.5" /> {t("room.verifiedHost")}
                 </Badge>
+                {stats.superHost && (
+                  <Badge className="gap-1 bg-accent/15 text-accent border-0 hover:bg-accent/20">
+                    <Award className="h-3.5 w-3.5" /> Super Host
+                  </Badge>
+                )}
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -133,7 +140,9 @@ const Host = () => {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
-                  <span>{t("host.responseTime")}: <span className="font-medium text-foreground">~1h</span></span>
+                  <span>{t("host.responseTime")}: <span className="font-medium text-foreground">
+                    {stats.responseMin > 0 ? (stats.responseMin < 60 ? `~${stats.responseMin}min` : `~${Math.round(stats.responseMin/60)}h`) : "—"}
+                  </span></span>
                 </span>
               </div>
             </div>
