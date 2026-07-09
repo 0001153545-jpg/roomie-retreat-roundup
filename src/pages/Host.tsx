@@ -60,14 +60,16 @@ const Host = () => {
       const mappedRooms = await enrichRoomsWithReviews((listingsData || []).map(mapListingToRoom));
       setRooms(mappedRooms);
 
-      // Aggregate reviews for this host's rooms
-      if (mappedRooms.length > 0) {
-        const roomIds = mappedRooms.map(r => r.id);
-        const { data: revs } = await supabase.from("reviews").select("rating").in("room_id", roomIds);
-        if (revs && revs.length > 0) {
-          const sum = revs.reduce((acc, r: any) => acc + (r.rating || 0), 0);
-          setStats({ avgRating: Number((sum / revs.length).toFixed(1)), totalReviews: revs.length });
-        }
+      // Fetch real host stats via RPC
+      const { data: statRows } = await (supabase.rpc as any)("get_host_stats", { _host_id: id });
+      const s = statRows && statRows.length > 0 ? statRows[0] : null;
+      if (s) {
+        setStats({
+          avgRating: Number(s.avg_rating) || 0,
+          totalReviews: Number(s.reviews_count) || 0,
+          responseMin: Number(s.avg_response_minutes) || 0,
+          superHost: Boolean(s.super_host),
+        });
       }
 
       setLoading(false);
