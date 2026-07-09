@@ -25,7 +25,7 @@ const Host = () => {
   const { formatPrice } = useCurrency();
   const [profile, setProfile] = useState<HostProfile | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0 });
+  const [stats, setStats] = useState({ avgRating: 0, totalReviews: 0, responseMin: 0, superHost: false });
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
 
