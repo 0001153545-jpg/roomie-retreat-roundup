@@ -120,6 +120,11 @@ const Host = () => {
                 <Badge className="gap-1 bg-primary/10 text-primary border-0 hover:bg-primary/15">
                   <BadgeCheck className="h-3.5 w-3.5" /> {t("room.verifiedHost")}
                 </Badge>
+                {stats.superHost && (
+                  <Badge className="gap-1 bg-accent/15 text-accent border-0 hover:bg-accent/20">
+                    <Award className="h-3.5 w-3.5" /> Super Host
+                  </Badge>
+                )}
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -135,7 +140,9 @@ const Host = () => {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
-                  <span>{t("host.responseTime")}: <span className="font-medium text-foreground">~1h</span></span>
+                  <span>{t("host.responseTime")}: <span className="font-medium text-foreground">
+                    {stats.responseMin > 0 ? (stats.responseMin < 60 ? `~${stats.responseMin}min` : `~${Math.round(stats.responseMin/60)}h`) : "—"}
+                  </span></span>
                 </span>
               </div>
             </div>
