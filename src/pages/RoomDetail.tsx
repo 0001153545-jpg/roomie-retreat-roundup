@@ -304,8 +304,10 @@ const RoomDetail = () => {
 
     const { data, error } = await supabase.from("reviews").insert({
       user_id: user.id, room_id: room.id, rating: userRating,
+      cleanliness: criteria.cleanliness, service: criteria.service, location: criteria.location,
+      comfort: criteria.comfort, value: criteria.value,
       comment: comment.trim(), user_name: user.user_metadata?.full_name || "User",
-    }).select().single();
+    } as any).select().single();
 
     if (error) {
       if (error.message.includes("duplicate") || error.message.includes("unique")) toast.error(t("room.alreadyReviewed"));
