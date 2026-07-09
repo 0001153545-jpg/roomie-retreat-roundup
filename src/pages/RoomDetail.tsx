@@ -65,7 +65,8 @@ const RoomDetail = () => {
   const [children, setChildren] = useState<number[]>([]);
   const [activeImage, setActiveImage] = useState(0);
   const [comment, setComment] = useState("");
-  const [userRating, setUserRating] = useState(5);
+  const [criteria, setCriteria] = useState({ cleanliness: 5, service: 5, location: 5, comfort: 5, value: 5 });
+  const userRating = Math.round(((criteria.cleanliness + criteria.service + criteria.location + criteria.comfort + criteria.value) / 5) * 10) / 10;
   const [dbReviews, setDbReviews] = useState<DbReview[]>([]);
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
   const [reviewerProfiles, setReviewerProfiles] = useState<Record<string, { full_name: string | null; avatar_url: string | null }>>({});
