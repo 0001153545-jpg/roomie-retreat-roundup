@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock } from "lucide-react";
+import { Star, MapPin, BadgeCheck, Building2, MessageCircle, Clock, Award } from "lucide-react";
 import { mapListingToRoom, enrichRoomsWithReviews } from "@/lib/listings";
 import { getOrCreateConversation } from "@/lib/chat";
 import { toast } from "sonner";
